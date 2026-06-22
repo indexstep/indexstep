@@ -40,3 +40,5 @@ next-env.d.ts
 
 # Prisma
 prisma/migrations/
+.vercel
+.env*

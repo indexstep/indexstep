@@ -1,0 +1,179 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  password         String
+  name             String
+  role             Role      @default(USER)
+  banned           Boolean   @default(false)
+  banReason        String?
+  profilePicture   String?
+  backgroundImage  String?
+  createdAt        DateTime  @default(now())
+  ipAddress        String?
+  termsAcceptedAt  DateTime?
+  age              Int?
+  gender           String?
+  country          String?
+  tutorials        Tutorial[]
+  comments         Comment[]
+  logs             SystemLog[]
+  reportsFiled     Report[]  @relation("Reporter")
+  reportsReceived  Report[]  @relation("ReportedUser")
+  purchases        Purchase[]
+}
+
+enum Role {
+  USER
+  MODERATOR
+  ADMIN
+}
+
+model Tutorial {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  category    String
+  difficulty  Int
+  timeMinutes Int
+  coverImage  String?
+  viewCount   Int      @default(0)
+  published   Boolean  @default(false)
+  locked      Boolean  @default(false)
+  lockContent Boolean  @default(false)
+  price       Int      @default(0) // price in cents, 0 = free
+  password    String?  // optional password to access a private guide
+  linkOnly    Boolean  @default(false) // unlisted — accessible via link but not in public listings
+  customToolConfigs Json?  // custom category field configs per tutorial
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id])
+  tools       Tool[]
+  steps       Step[]
+  comments    Comment[]
+  reports     Report[]
+  purchases   Purchase[]
+  versions    TutorialVersion[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  editCount   Int      @default(0)
+  lastEditAt  DateTime?
+  isFlagged   Boolean  @default(false)
+  flagReason  String?
+}
+
+model TutorialVersion {
+  id           String   @id @default(cuid())
+  tutorialId   String
+  tutorial     Tutorial @relation(fields: [tutorialId], references: [id], onDelete: Cascade)
+  title        String
+  description  String
+  category     String
+  difficulty   Int
+  timeMinutes  Int
+  coverImage   String?
+  published    Boolean
+  locked       Boolean
+  lockContent  Boolean
+  price        Int
+  linkOnly     Boolean
+  customToolConfigs Json?
+  steps        Json     // serialized Step[]
+  tools        Json     // serialized Tool[]
+  editedAt     DateTime @default(now())
+  editReason   String?
+  isFlagged    Boolean  @default(false)
+}
+
+model Purchase {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  tutorialId  String
+  tutorial    Tutorial @relation(fields: [tutorialId], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, tutorialId])
+}
+
+model Tool {
+  id         String   @id @default(cuid())
+  name       String
+  quantity   String?  // e.g. "2 cups", "500g", "3 pieces"
+  size       String?  // e.g. "large", "medium", "small", "1 inch"
+  kind       String?  // e.g. "organic", "instant", "any type"
+  notes      String?  // e.g. "pre-cut preferred", "room temperature"
+  tutorialId String
+  category   String   @default("DIY") // category-specific tab label set
+  tutorial   Tutorial @relation(fields: [tutorialId], references: [id], onDelete: Cascade)
+}
+
+model Step {
+  id         String   @id @default(cuid())
+  order      Int
+  title      String
+  content    String
+  imageUrl   String?
+  tutorialId String
+  tutorial   Tutorial @relation(fields: [tutorialId], references: [id], onDelete: Cascade)
+}
+
+model Comment {
+  id         String    @id @default(cuid())
+  content    String
+  likeCount  Int       @default(0)
+  likedBy    String    @default("") // comma-separated user IDs for SQLite simplicity
+  authorId   String
+  author     User     @relation(fields: [authorId], references: [id])
+  tutorialId String
+  tutorial   Tutorial @relation(fields: [tutorialId], references: [id], onDelete: Cascade)
+  parentId   String?
+  parent     Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies    Comment[] @relation("CommentReplies")
+  createdAt  DateTime  @default(now())
+}
+
+
+model SystemLog {
+  id        String   @id @default(cuid())
+  action    String
+  target    String?
+  actorId   String
+  actor     User     @relation(fields: [actorId], references: [id])
+  ipAddress String?
+  createdAt DateTime @default(now())
+}
+
+model Report {
+  id             String       @id @default(cuid())
+  type           ReportType
+  reason         String
+  status         ReportStatus @default(PENDING)
+  reporterId     String
+  reporter       User         @relation("Reporter", fields: [reporterId], references: [id])
+  reportedUserId String?
+  reportedUser   User?        @relation("ReportedUser", fields: [reportedUserId], references: [id])
+  tutorialId     String?
+  tutorial       Tutorial?    @relation(fields: [tutorialId], references: [id])
+  adminNote      String?
+  resolvedAt     DateTime?
+  createdAt      DateTime     @default(now())
+}
+
+enum ReportType {
+  USER
+  TUTORIAL
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  DISMISSED
+  ACTIONED
+}

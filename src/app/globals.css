@@ -1,0 +1,279 @@
+@import "tailwindcss";
+
+/* ========================
+   AYU LIGHT THEME
+   ======================== */
+[data-theme="light"] {
+  --bg: #fafafa;
+  --bg-secondary: #f3f3f3;
+  --bg-tertiary: #ebebeb;
+  --bg-highlight: #d9d9d9;
+
+  --text: #5a5a5a;
+  --text-secondary: #707070;
+  --text-muted: #a0a0a0;
+
+  --accent: #f79a42;
+  --accent-hover: #d88a38;
+  --accent-muted: rgba(247, 154, 66, 0.12);
+
+  --cyan: #0098dd;
+  --cyan-muted: rgba(0, 152, 221, 0.12);
+
+  --purple: #5b5ea6;
+  --purple-muted: rgba(91, 94, 166, 0.12);
+
+  --yellow: #d4a800;
+  --green: #7b8d0a;
+  --red: #d73a49;
+  --orange: #f79a42;
+
+  --success: #7b8d0a;
+  --warning: #d4a800;
+  --error: #d73a49;
+
+  --border: #d9d9d9;
+  --border-light: #c0c0c0;
+
+  --navbar-bg: rgba(250, 250, 250, 0.95);
+  --card-bg: #ffffff;
+  --input-bg: #f3f3f3;
+}
+
+/* ========================
+   AYU DARK THEME
+   ======================== */
+[data-theme="dark"] {
+  --bg: #0f0f14;
+  --bg-secondary: #171721;
+  --bg-tertiary: #1f1f2b;
+  --bg-highlight: #2a2a3d;
+
+  --text: #cbccc6;
+  --text-secondary: #8b8e96;
+  --text-muted: #5c6370;
+
+  --accent: #f79a42;
+  --accent-hover: #fba85c;
+  --accent-muted: rgba(247, 154, 66, 0.15);
+
+  --cyan: #73d0ff;
+  --cyan-muted: rgba(115, 208, 255, 0.15);
+
+  --purple: #7070c0;
+  --purple-muted: rgba(112, 112, 192, 0.15);
+
+  --yellow: #e6c866;
+  --green: #aad94c;
+  --red: #f26d78;
+  --orange: #f79a42;
+
+  --success: #aad94c;
+  --warning: #e6c866;
+  --error: #f26d78;
+
+  --border: #2a2a3d;
+  --border-light: #3a3a4d;
+
+  --navbar-bg: rgba(15, 15, 20, 0.95);
+  --card-bg: #171721;
+  --input-bg: #1f1f2b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background-color: var(--bg);
+  color: var(--text);
+}
+
+/* Custom scrollbar - Ayu style */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-highlight);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-light);
+}
+
+/* Line clamp utilities */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Hide scrollbar utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Stagger children */
+.stagger-children > * {
+  animation: fadeIn 0.3s ease-out backwards;
+}
+
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 50ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 100ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 150ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 200ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 250ms; }
+
+/* Ayu button glow effect */
+.btn-glow {
+  box-shadow: 0 0 20px rgba(255, 153, 64, 0.3);
+}
+
+.btn-glow:hover {
+  box-shadow: 0 0 30px rgba(255, 153, 64, 0.5);
+}
+
+/* Card hover effect */
+.card-hover {
+  transition: all 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3), 0 0 0 1px var(--accent);
+}
+
+/* Ayu selection */
+::selection {
+  background: var(--accent-muted);
+  color: var(--accent);
+}
+
+/* Focus ring - Ayu style */
+*:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Grid pattern background */
+.grid-pattern {
+  background-image:
+    linear-gradient(rgba(255, 153, 64, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 153, 64, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Skeleton loading */
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-secondary) 25%, var(--bg-tertiary) 50%, var(--bg-secondary) 75%);
+  background-size: 200% 100%;
+  animation: skeleton 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ========================
+   LIGHT THEME — GLOBAL UTILITY OVERRIDES
+   (Overrides hardcoded Tailwind dark-mode slate values)
+   ======================== */
+[data-theme="light"] {
+  /* Slates -> light palette */
+  .bg-slate-900 { background-color: var(--bg) !important; }
+  .bg-slate-800 { background-color: var(--bg-secondary) !important; }
+  .bg-slate-700 { background-color: var(--bg-tertiary) !important; }
+  .bg-slate-600 { background-color: var(--bg-highlight) !important; }
+  .bg-slate-500 { background-color: var(--bg-highlight) !important; }
+
+  .text-slate-100 { color: var(--text) !important; }
+  .text-slate-300 { color: var(--text) !important; }
+  .text-slate-400 { color: var(--text-secondary) !important; }
+  .text-slate-500 { color: var(--text-muted) !important; }
+
+  .border-slate-700 { border-color: var(--border) !important; }
+  .border-slate-600 { border-color: var(--border) !important; }
+  .border-slate-500 { border-color: var(--border) !important; }
+
+  .placeholder\:text-slate-400::placeholder { color: var(--text-muted) !important; }
+
+  /* Transparent overlays */
+  .bg-black\/50 { background-color: rgba(0,0,0,0.25) !important; }
+  .bg-black\/20 { background-color: rgba(0,0,0,0.1) !important; }
+
+  /* Ring colors */
+  .ring-slate-700 { --tw-ring-color: var(--border) !important; }
+
+  /* Input backgrounds */
+  input.bg-slate-800,
+  input.bg-slate-700,
+  textarea.bg-slate-800,
+  textarea.bg-slate-700 {
+    background-color: var(--input-bg) !important;
+    color: var(--text) !important;
+  }
+}

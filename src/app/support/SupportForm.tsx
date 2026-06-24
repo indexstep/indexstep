@@ -62,8 +62,8 @@ export default function SupportForm() {
           <div className="mt-6 pt-6 border-t border-[var(--border)] text-center text-sm text-[var(--text-muted)]">
             <p>
               Prefer email?{" "}
-              <a href="mailto:support@indexstep.com" className="text-[var(--accent)] hover:underline">
-                support@indexstep.com
+              <a href="mailto:support@stephud.com" className="text-[var(--accent)] hover:underline">
+                support@stephud.com
               </a>
             </p>
           </div>

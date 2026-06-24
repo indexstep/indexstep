@@ -72,7 +72,7 @@ export default function HomePage() {
       <section className="relative bg-gradient-to-b from-[var(--bg-secondary)] to-[var(--bg)] border-b border-[var(--border)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
           <div className="text-center max-w-3xl mx-auto">
-            <img src="/images/logo.png" alt="indexstep" className="w-40 h-40 object-contain mx-auto mb-6" />
+            <img src="/images/logo.png" alt="stephud" className="w-40 h-40 object-contain mx-auto mb-6" />
             <h1 className="text-4xl md:text-5xl font-bold text-[var(--text)] mb-4 leading-tight">
               Step-by-Step Guides,{" "}
               <span className="text-[var(--accent)]">Beautifully Organized</span>

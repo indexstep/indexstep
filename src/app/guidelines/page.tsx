@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Content Guidelines | indexstep",
-  description: "Community content guidelines for indexstep — keep tutorials safe, legal, and respectful.",
+  title: "Content Guidelines | stephud",
+  description: "Community content guidelines for stephud — keep tutorials safe, legal, and respectful.",
 };
 
 export default function GuidelinesPage() {
@@ -16,10 +16,10 @@ export default function GuidelinesPage() {
           <section>
             <h2 className="text-xl font-semibold text-[var(--text)] mb-3">1. Purpose of These Guidelines</h2>
             <p>
-              indexstep is a platform for sharing knowledge and skills through step-by-step tutorials. Our goal is to create a safe, helpful, and welcoming community where people can learn and teach. These Content Guidelines exist to protect all users and ensure the platform remains a positive resource for everyone.
+              stephud is a platform for sharing knowledge and skills through step-by-step tutorials. Our goal is to create a safe, helpful, and welcoming community where people can learn and teach. These Content Guidelines exist to protect all users and ensure the platform remains a positive resource for everyone.
             </p>
             <p className="mt-2">
-              By creating an account or posting content on indexstep, you agree to follow these guidelines. Violations may result in content removal, account suspension, or permanent termination.
+              By creating an account or posting content on stephud, you agree to follow these guidelines. Violations may result in content removal, account suspension, or permanent termination.
             </p>
           </section>
 
@@ -108,7 +108,7 @@ export default function GuidelinesPage() {
 
           <section>
             <h2 className="text-xl font-semibold text-[var(--text)] mb-3">6. Respect and Civility</h2>
-            <p>indexstep is a community. Treat others with respect:</p>
+            <p>stephud is a community. Treat others with respect:</p>
             <ul className="list-disc pl-6 space-y-2 mt-2">
               <li>Constructive criticism is welcome. Unhelpful or mean-spirited comments are not.</li>
               <li>Don't harass, bully, or intimidate other users.</li>
@@ -128,8 +128,8 @@ export default function GuidelinesPage() {
             </p>
             <p className="mt-2">
               Contact us at{' '}
-              <a href="mailto:support@indexstep.com" className="text-[var(--accent)] hover:underline">
-                support@indexstep.com
+              <a href="mailto:support@stephud.com" className="text-[var(--accent)] hover:underline">
+                support@stephud.com
               </a>
               {' '}for non-urgent concerns or questions about these guidelines.
             </p>
@@ -137,7 +137,7 @@ export default function GuidelinesPage() {
 
           <section>
             <h2 className="text-xl font-semibold text-[var(--text)] mb-3">8. Enforcement</h2>
-            <p>When violations occur, indexstep may take the following actions:</p>
+            <p>When violations occur, stephud may take the following actions:</p>
             <ul className="list-disc pl-6 space-y-2 mt-2">
               <li><strong>Content removal:</strong> Violating content will be removed from the platform.</li>
               <li><strong>Warning:</strong> First-time minor violations may result in a warning and temporary content restriction.</li>

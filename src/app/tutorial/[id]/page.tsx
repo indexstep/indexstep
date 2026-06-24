@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const url = `${baseUrl}/tutorial/${id}`;
 
   return {
-    title: `${tutorial.title} | indexstep`,
+    title: `${tutorial.title} | stephud`,
     description: tutorial.description,
     authors: [{ name: tutorial.author.name }],
     openGraph: {

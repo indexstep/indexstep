@@ -1,7 +1,9 @@
 import { MetadataRoute } from "next";
 import prisma from "@/lib/prisma";
 
-const BASE_URL = process.env.BASE_URL || "http://localhost:3000";
+export const dynamic = "force-dynamic";
+
+const BASE_URL = "https://stephud.com";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const tutorials = await prisma.tutorial.findMany({

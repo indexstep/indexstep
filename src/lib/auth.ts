@@ -3,8 +3,8 @@ import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 import prisma from "./prisma";
 
-const JWT_SECRET = process.env.JWT_SECRET || "indexstep-secret-key-change-in-production";
-const COOKIE_NAME = "indexstep_token";
+const JWT_SECRET = process.env.JWT_SECRET || "stephud-secret-key-change-in-production";
+const COOKIE_NAME = "stephud_token";
 
 export type Role = "USER" | "MODERATOR" | "ADMIN";
 

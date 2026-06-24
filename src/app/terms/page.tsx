@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Terms of Service | indexstep",
-  description: "Terms of Service for indexstep — your rights and responsibilities when using our platform.",
+  title: "Terms of Service | stephud",
+  description: "Terms of Service for stephud — your rights and responsibilities when using our platform.",
 };
 
 export default function TermsPage() {
@@ -17,14 +17,14 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-semibold text-[var(--text)] mb-3">1. Acceptance of Terms</h2>
             <p>
-              By creating an account or using indexstep, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our platform.
+              By creating an account or using stephud, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our platform.
             </p>
           </section>
 
           <section>
             <h2 className="text-xl font-semibold text-[var(--text)] mb-3">2. Description of Service</h2>
             <p>
-              Indexstep is a visual tutorial platform that allows users to create, share, and discover step-by-step guides across various categories including DIY, cooking, tech, crafts, and more. Our platform provides tools for authors to publish tutorials with progress tracking, tool lists, and step-by-step instructions.
+              stephud is a visual tutorial platform that allows users to create, share, and discover step-by-step guides across various categories including DIY, cooking, tech, crafts, and more. Our platform provides tools for authors to publish tutorials with progress tracking, tool lists, and step-by-step instructions.
             </p>
           </section>
 
@@ -44,7 +44,7 @@ export default function TermsPage() {
 
           <section>
             <h2 className="text-xl font-semibold text-[var(--text)] mb-3">4. Content Guidelines</h2>
-            <p className="mb-3">All content posted on indexstep must comply with our <Link href="/guidelines" className="text-[var(--accent)] hover:underline">Content Guidelines</Link>. Content that is prohibited includes but is not limited to:</p>
+            <p className="mb-3">All content posted on stephud must comply with our <Link href="/guidelines" className="text-[var(--accent)] hover:underline">Content Guidelines</Link>. Content that is prohibited includes but is not limited to:</p>
             <ul className="list-disc pl-6 space-y-1">
               <li>Suicide or self-harm instructions</li>
               <li>Instructions for creating weapons or explosives</li>
@@ -62,10 +62,10 @@ export default function TermsPage() {
 
           <section>
             <h2 className="text-xl font-semibold text-[var(--text)] mb-3">5. Tutorial Creation</h2>
-            <p className="mb-3">When you create a tutorial on indexstep, you:</p>
+            <p className="mb-3">When you create a tutorial on stephud, you:</p>
             <ul className="list-disc pl-6 space-y-1">
               <li>Retain ownership of your content</li>
-              <li>Grant indexstep a non-exclusive, royalty-free license to display, distribute, and promote your tutorial</li>
+              <li>Grant stephud a non-exclusive, royalty-free license to display, distribute, and promote your tutorial</li>
               <li>Confirm that your content does not violate any third-party rights</li>
               <li>Accept responsibility for ensuring your tutorial is accurate, safe, and legal</li>
             </ul>
@@ -92,14 +92,14 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-semibold text-[var(--text)] mb-3">8. Intellectual Property</h2>
             <p>
-              The indexstep name, logo, and all related trademarks are property of indexstep. You may not use our branding without permission. Other users&apos; tutorials are their intellectual property — do not copy, redistribute, or claim them as your own.
+              The stephud name, logo, and all related trademarks are property of stephud. You may not use our branding without permission. Other users&apos; tutorials are their intellectual property — do not copy, redistribute, or claim them as your own.
             </p>
           </section>
 
           <section>
             <h2 className="text-xl font-semibold text-[var(--text)] mb-3">9. Privacy</h2>
             <p>
-              Your privacy is important to us. Please review our <Link href="/privacy" className="text-[var(--accent)] hover:underline">Privacy Policy</Link> to understand how we collect, use, and protect your personal information. By using indexstep, you consent to our data practices as described in the Privacy Policy.
+              Your privacy is important to us. Please review our <Link href="/privacy" className="text-[var(--accent)] hover:underline">Privacy Policy</Link> to understand how we collect, use, and protect your personal information. By using stephud, you consent to our data practices as described in the Privacy Policy.
             </p>
           </section>
 
@@ -119,21 +119,21 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-semibold text-[var(--text)] mb-3">11. Disclaimer of Warranties</h2>
             <p>
-              indexstep is provided &quot;as is&quot; without warranties of any kind. We do not guarantee that the platform will be uninterrupted, secure, or error-free. The information in tutorials is provided by users — we do not endorse or verify the accuracy of any tutorial. Use your own judgment and follow safety guidelines when attempting any tutorial.
+              stephud is provided &quot;as is&quot; without warranties of any kind. We do not guarantee that the platform will be uninterrupted, secure, or error-free. The information in tutorials is provided by users — we do not endorse or verify the accuracy of any tutorial. Use your own judgment and follow safety guidelines when attempting any tutorial.
             </p>
           </section>
 
           <section>
             <h2 className="text-xl font-semibold text-[var(--text)] mb-3">12. Limitation of Liability</h2>
             <p>
-              To the maximum extent permitted by law, indexstep and its operators shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the platform, any tutorial, or any purchase made through the platform.
+              To the maximum extent permitted by law, stephud and its operators shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the platform, any tutorial, or any purchase made through the platform.
             </p>
           </section>
 
           <section>
             <h2 className="text-xl font-semibold text-[var(--text)] mb-3">13. Modifications to Terms</h2>
             <p>
-              We may update these Terms from time to time. We will notify you of significant changes by posting a notice on the platform or sending an email. Continued use of indexstep after changes constitutes acceptance of the new terms.
+              We may update these Terms from time to time. We will notify you of significant changes by posting a notice on the platform or sending an email. Continued use of stephud after changes constitutes acceptance of the new terms.
             </p>
           </section>
 
@@ -155,8 +155,8 @@ export default function TermsPage() {
             </p>
             <p className="text-sm text-[var(--text-muted)]">
               You can also email us at{" "}
-              <a href="mailto:support@indexstep.com" className="text-[var(--accent)] hover:underline">
-                support@indexstep.com
+              <a href="mailto:support@stephud.com" className="text-[var(--accent)] hover:underline">
+                support@stephud.com
               </a>
               , but tickets are processed more quickly.
             </p>

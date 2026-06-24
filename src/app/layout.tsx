@@ -11,25 +11,21 @@ import { Suspense } from "react";
 
 const inter = Inter({ subsets: ["latin"] });
 
-const BASE_URL = process.env.BASE_URL || "http://localhost:3000";
-
 export const metadata: Metadata = {
   title: {
-    default: "indexstep - Visual Tutorial Platform",
-    template: "%s | indexstep",
+    default: "stephud - Visual Tutorial Platform",
+    template: "%s | stephud",
   },
   description: "Create and follow step-by-step visual guides for DIY, cooking, tech, crafts, and more.",
-  metadataBase: BASE_URL,
   openGraph: {
     type: "website",
-    siteName: "indexstep",
-    title: "indexstep - Visual Tutorial Platform",
+    siteName: "stephud",
+    title: "stephud - Visual Tutorial Platform",
     description: "Create and follow step-by-step visual guides for DIY, cooking, tech, crafts, and more.",
-    url: BASE_URL,
   },
   twitter: {
     card: "summary_large_image",
-    site: "@indexstep",
+    site: "@stephud",
   },
 };
 

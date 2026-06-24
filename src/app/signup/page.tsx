@@ -41,8 +41,8 @@ export default function SignupPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex flex-col items-center gap-2">
-            <img src="/images/logo.png" alt="indexstep" className="w-24 h-24 object-contain" />
-            <span className="text-2xl font-bold text-[var(--text)]">indexstep</span>
+            <img src="/images/logo.png" alt="stephud" className="w-24 h-24 object-contain" />
+            <span className="text-2xl font-bold text-[var(--text)]">stephud</span>
           </Link>
           <div className="mt-3">
             <span 

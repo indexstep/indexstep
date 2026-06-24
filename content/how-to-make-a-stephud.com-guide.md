@@ -1,21 +1,21 @@
-# How to Make an IndexStep Guide
+# How to Make a stephud.com Guide
 
 **Category:** DIY  
 **Difficulty:** 2 – Medium  
 **Time:** 15 minutes  
-**Cover Image:** (upload a screenshot of the IndexStep create page or the orange folder logo)
+**Cover Image:** (upload a screenshot of the stephud.com create page or the orange folder logo)
 
 ---
 
 ## Overview
 
-IndexStep lets you create step-by-step visual guides for anything — DIY projects, recipes, tech tutorials, crafts, and more. This tutorial walks you through the full process of creating and publishing your first guide.
+stephud.com lets you create step-by-step visual guides for anything — DIY projects, recipes, tech tutorials, crafts, and more. This tutorial walks you through the full process of creating and publishing your first guide.
 
 ---
 
 ## Step 1: Sign In
 
-Open [indexstep](/) and click **Sign Up** if you don't have an account yet, or **Log In** if you do.
+Open [stephud.com](/) and click **Sign Up** if you don't have an account yet, or **Log In** if you do.
 
 Once signed in, click your profile icon in the top-right corner to access your dashboard.
 

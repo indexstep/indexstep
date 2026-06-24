@@ -126,7 +126,7 @@ export default function ProfilePage() {
   };
 
   const loadPreferences = () => {
-    const prefs = localStorage.getItem("indexstep_prefs");
+    const prefs = localStorage.getItem("stephud_prefs");
     if (prefs) {
       const p = JSON.parse(prefs);
       setViewMode(p.viewMode || "grid");
@@ -137,7 +137,7 @@ export default function ProfilePage() {
 
   const savePreferences = () => {
     const prefs = { viewMode, defaultCategory, defaultDifficulty };
-    localStorage.setItem("indexstep_prefs", JSON.stringify(prefs));
+    localStorage.setItem("stephud_prefs", JSON.stringify(prefs));
     showToast("Preferences saved!", "success");
   };
 
@@ -658,7 +658,7 @@ export default function ProfilePage() {
               <div className="bg-[var(--bg-secondary)] rounded-xl border border-[var(--border)] p-6">
                 <h2 className="text-lg font-semibold text-[var(--text)] mb-4 flex items-center gap-2"><Shield className="w-5 h-5 text-[var(--accent)]" />Moderator Access</h2>
                 <p className="text-[var(--text-secondary)] text-sm mb-4">
-                  You have {user.role === "ADMIN" ? "full admin" : "moderator"} access to manage content on indexstep.
+                  You have {user.role === "ADMIN" ? "full admin" : "moderator"} access to manage content on stephud.
                 </p>
                 <Link href="/admin"><Button variant="secondary"><Shield className="w-4 h-4 mr-2" />Open Admin Panel</Button></Link>
               </div>

@@ -1,5 +1,5 @@
 /**
- * Profanity and content filter for indexstep.
+ * Profanity and content filter for stephud.
  * Blocks: profanity, slurs, sexual content, hate speech, self-harm, dangerous instructions, and spam.
  */
 

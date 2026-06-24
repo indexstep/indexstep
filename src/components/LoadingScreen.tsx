@@ -48,7 +48,7 @@ export default function LoadingScreen({ onComplete, minDuration = 1500 }: Loadin
       >
         <img
           src="/images/logo.png"
-          alt="indexstep"
+          alt="stephud"
           className="w-24 h-24 object-contain logo-bounce mb-8"
         />
 

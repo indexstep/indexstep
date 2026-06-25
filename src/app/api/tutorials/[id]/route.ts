@@ -68,11 +68,11 @@ export async function GET(
       },
     });
 
-    // Extra query to get password and linkOnly (libsql adapter strips them from main query)
+    // Extra query to get password and "linkOnly" (libsql adapter strips them from main query)
     let tutorialPassword: string | null = null;
     let tutorialLinkOnly = false;
     try {
-      const extraResult = await prisma.$queryRaw<{ password: string | null; linkOnly: boolean }[]>`SELECT password, linkOnly FROM Tutorial WHERE id = ${id}`;
+      const extraResult = await prisma.$queryRaw<{ password: string | null; linkOnly: boolean }[]>`SELECT password, "linkOnly" FROM tutorial WHERE id = ${id}`;
       tutorialPassword = extraResult[0]?.password || null;
       tutorialLinkOnly = extraResult[0]?.linkOnly || false;
     } catch (e) {
@@ -140,7 +140,7 @@ export async function PUT(
     // Get current password (libsql adapter strips it from main query)
     let tutorialPassword: string | null = null;
     try {
-      const pwResult = await prisma.$queryRaw<{ password: string }[]>`SELECT password FROM Tutorial WHERE id = ${id}`;
+      const pwResult = await prisma.$queryRaw<{ password: string }[]>`SELECT password FROM tutorial WHERE id = ${id}`;
       tutorialPassword = pwResult[0]?.password || null;
     } catch (e) {
       console.error("Error fetching password:", e);
@@ -223,7 +223,7 @@ export async function PUT(
         locked: tutorial.locked,
         lockContent: tutorial.lockContent,
         price: tutorial.price,
-        linkOnly: (tutorial as any).linkOnly ?? false,
+        linkOnly: (tutorial as any)."linkOnly" ?? false,
         customToolConfigs: tutorial.customToolConfigs as object || null,
         steps: tutorial.steps.map(s => ({ id: s.id, title: s.title, content: s.content, imageUrl: s.imageUrl, order: s.order })),
         tools: tutorial.tools.map(t => ({ id: t.id, name: t.name, quantity: t.quantity, size: t.size, kind: t.kind, notes: t.notes, category: t.category })),
@@ -250,7 +250,7 @@ export async function PUT(
         locked: locked !== undefined ? locked : tutorial.locked,
         lockContent: lockContent !== undefined ? lockContent : tutorial.lockContent,
         price: price !== undefined ? Math.round(price) : tutorial.price,
-        linkOnly: linkOnly !== undefined ? linkOnly : (tutorial as any).linkOnly || false,
+        linkOnly: (linkOnly as boolean | undefined) !== undefined ? linkOnly : (tutorial as any).linkOnly || false,
         password: password !== undefined ? (password ? await bcrypt.hash(password, 10) : null) : tutorialPassword,
         tools: tools ? {
           create: tools.map((t: { name: string; quantity?: string; size?: string; kind?: string; notes?: string; category?: string }) => ({

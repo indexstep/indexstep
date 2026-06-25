@@ -84,12 +84,12 @@ export default async function TutorialPage({ params }: Props) {
   const isAdminOrAuthor = user && (user.role === "ADMIN" || user.role === "MODERATOR" || user.id === tutorial.authorId);
 
   // Check password protection — non-admins/authors get minimal data
-  const tutorialPassword = await prisma.$queryRaw<{ password: string | null; linkOnly: boolean }[]>`SELECT password, linkOnly FROM Tutorial WHERE id = ${id}`;
+  const tutorialPassword = await prisma.$queryRaw<{ password: string | null; linkOnly: boolean }[]>`SELECT password, "linkOnly" FROM tutorial WHERE id = ${id}`;
   const hasPassword = tutorialPassword[0]?.password || null;
   const hasLinkOnly = tutorialPassword[0]?.linkOnly || false;
   const requiresPassword = !!hasPassword && !isAdminOrAuthor;
 
-  // Check if tutorial is accessible — linkOnly means accessible via direct link even if not published
+  // Check if tutorial is accessible — "linkOnly" means accessible via direct link even if not published
   const isAccessible = tutorial.published || hasLinkOnly || isAdminOrAuthor;
   if (!isAccessible) notFound();
 

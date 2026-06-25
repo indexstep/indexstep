@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
         id: true, title: true, description: true, category: true,
         difficulty: true, timeMinutes: true, coverImage: true,
         published: true, locked: true, lockContent: true, price: true,
-        linkOnly: true, viewCount: true, createdAt: true,
+        "linkOnly": true, viewCount: true, createdAt: true,
         author: { select: { id: true, name: true, email: true } },
         _count: { select: { steps: true, tools: true } },
       },
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
 
     // Get passwords separately (libsql adapter strips them from main query)
     const ids = tutorials.map(t => t.id);
-    const passwordRows = await prisma.$queryRaw<{ id: string; password: string }[]>`SELECT id, password FROM Tutorial WHERE id IN (${ids.join(',')})`;
+    const passwordRows = await prisma.$queryRaw<{ id: string; password: string }[]>`SELECT id, password FROM tutorial WHERE id IN (${ids.join(',')})`;
     const passwordMap = new Map(passwordRows.map(r => [r.id, r.password]));
 
     const tutorialsWithPassword = tutorials.map(t => ({

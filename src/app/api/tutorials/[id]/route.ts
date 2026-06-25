@@ -72,7 +72,7 @@ export async function GET(
     let tutorialPassword: string | null = null;
     let tutorialLinkOnly = false;
     try {
-      const extraResult = await prisma.$queryRaw<{ password: string | null; linkOnly: boolean }[]>`SELECT password, "linkOnly" FROM tutorial WHERE id = ${id}`;
+      const extraResult = await prisma.$queryRaw<{ password: string | null; linkOnly: boolean }[]>`SELECT password, "linkOnly" FROM "Tutorial" WHERE id = ${id}`;
       tutorialPassword = extraResult[0]?.password || null;
       tutorialLinkOnly = extraResult[0]?.linkOnly || false;
     } catch (e) {
@@ -140,7 +140,7 @@ export async function PUT(
     // Get current password (libsql adapter strips it from main query)
     let tutorialPassword: string | null = null;
     try {
-      const pwResult = await prisma.$queryRaw<{ password: string }[]>`SELECT password FROM tutorial WHERE id = ${id}`;
+      const pwResult = await prisma.$queryRaw<{ password: string }[]>`SELECT password FROM "Tutorial" WHERE id = ${id}`;
       tutorialPassword = pwResult[0]?.password || null;
     } catch (e) {
       console.error("Error fetching password:", e);
@@ -223,7 +223,7 @@ export async function PUT(
         locked: tutorial.locked,
         lockContent: tutorial.lockContent,
         price: tutorial.price,
-        linkOnly: (tutorial as any)."linkOnly" ?? false,
+        linkOnly: (tutorial as any).linkOnly ?? false,
         customToolConfigs: tutorial.customToolConfigs as object || null,
         steps: tutorial.steps.map(s => ({ id: s.id, title: s.title, content: s.content, imageUrl: s.imageUrl, order: s.order })),
         tools: tutorial.tools.map(t => ({ id: t.id, name: t.name, quantity: t.quantity, size: t.size, kind: t.kind, notes: t.notes, category: t.category })),

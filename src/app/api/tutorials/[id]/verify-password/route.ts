@@ -15,7 +15,7 @@ export async function POST(
     }
 
     // Get tutorial with password
-    const tutorialWithPass = await prisma.$queryRaw<{ password: string | null }[]>`SELECT password FROM tutorial WHERE id = ${id}`;
+    const tutorialWithPass = await prisma.$queryRaw<{ password: string | null }[]>`SELECT password FROM "Tutorial" WHERE id = ${id}`;
     const hashedPassword = tutorialWithPass[0]?.password;
 
     if (!hashedPassword) {

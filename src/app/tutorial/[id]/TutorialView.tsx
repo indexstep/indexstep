@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Clock, User, CheckCircle, Circle, Wrench, X, ArrowLeft, Flag, AlertTriangle, Eye, Share2, MessageCircle, Send, Trash2, Copy, Check, CornerDownRight, Pencil, Settings2, ChefHat, Cpu, Hammer, Flower2, Scissors, Monitor, Lock, KeyRound } from "lucide-react";
+import { Clock, User, CheckCircle, Circle, Wrench, X, ArrowLeft, Flag, AlertTriangle, Eye, Share2, MessageCircle, Send, Trash2, Copy, Check, CornerDownRight, Pencil, Settings2, ChefHat, Cpu, Hammer, Flower2, Scissors, Monitor, Lock, KeyRound, ThumbsUp } from "lucide-react";
 import Button from "@/components/Button";
 import { useAuth } from "@/contexts/AuthContext";
 import { getMergedToolConfig, TOOL_CATEGORY_CONFIG, type CustomToolFieldConfig } from "@/lib/toolCategories";
@@ -19,6 +19,7 @@ interface CommentData {
 interface TutorialDetailData {
   id: string; title: string; description: string; category: string;
   difficulty: number; timeMinutes: number; coverImage: string | null; viewCount?: number;
+  likeCount?: number; likedByMe?: boolean;
   locked: boolean; lockContent: boolean; price: number; password?: string | null;
   requiresPassword?: boolean; isUnlocked?: boolean;
   author: { id: string; name: string }; tools: Tool[]; steps: Step[];
@@ -51,6 +52,8 @@ export default function TutorialView({ initialTutorial }: TutorialViewProps) {
   const [copied, setCopied] = useState(false);
   const [comments, setComments] = useState<CommentData[]>([]);
   const [commentsOpen, setCommentsOpen] = useState(false);
+  const [likedByMe, setLikedByMe] = useState(initialTutorial?.likedByMe ?? false);
+  const [localLikeCount, setLocalLikeCount] = useState(initialTutorial?.likeCount ?? 0);
   const [newComment, setNewComment] = useState("");
   const [submittingComment, setSubmittingComment] = useState(false);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
@@ -252,6 +255,29 @@ export default function TutorialView({ initialTutorial }: TutorialViewProps) {
             {tutorial.viewCount !== undefined && (
               <div className="flex items-center gap-2"><Eye className="w-5 h-5" /><span>{tutorial.viewCount.toLocaleString()} views</span></div>
             )}
+            {localLikeCount > 0 && (
+              <div className="flex items-center gap-2"><ThumbsUp className="w-4 h-4" /><span>{localLikeCount.toLocaleString()} likes</span></div>
+            )}
+            <button
+              onClick={async () => {
+                if (!user) { router.push("/login"); return; }
+                if (user.id === tutorial.author.id) return;
+                try {
+                  const res = await fetch(`/api/tutorials/${tutorial.id}/like`, { method: "POST" });
+                  if (res.ok) {
+                    const data = await res.json();
+                    setLikedByMe(data.liked);
+                    setLocalLikeCount(data.likeCount);
+                  }
+                } catch (err) {
+                  console.error("Failed to like:", err);
+                }
+              }}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors ${likedByMe ? "bg-[var(--accent)]/20 text-[var(--accent)]" : "bg-[var(--bg-highlight)] text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[#3a3a4d]"}`}
+            >
+              <ThumbsUp className={`w-4 h-4 ${likedByMe ? "fill-current" : ""}`} />
+              <span className="hidden sm:inline">{likedByMe ? "Liked" : "Like"}</span>
+            </button>
             <button
               onClick={() => {
                 navigator.clipboard.writeText(window.location.href).catch(() => {});

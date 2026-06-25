@@ -50,27 +50,68 @@ export async function GET(request: NextRequest) {
     }
 
     const orderBy: Record<string, string> =
-      sort === "oldest"      ? { createdAt: "asc" }
-    : sort === "popular"     ? { viewCount: "desc" }
-    :                            { createdAt: "desc" };
+      sort === "oldest"  ? { createdAt: "asc" }
+    : sort === "newest" ? { createdAt: "desc" }
+    : sort === "popular" ? { viewCount: "desc" } // placeholder; replaced below
+    :                     { createdAt: "desc" };
 
-    const [tutorials, total] = await Promise.all([
-      prisma.tutorial.findMany({
-        where,
-        include: {
-          author: {
-            select: { id: true, name: true },
+    let tutorials;
+    let total;
+
+    if (sort === "popular") {
+      // Engagement score = likes*10 + comments*5 + views
+      // Use raw SQL to compute and sort by it, then fetch full records by ids
+      const rawResults = await prisma.$queryRaw<{ id: string; engagement_score: bigint }[]>`
+        SELECT t.id,
+          (t."likeCount" * 10 + COALESCE(c.comment_count, 0)::int * 5 + t."viewCount") as engagement_score
+        FROM "Tutorial" t
+        LEFT JOIN (
+          SELECT "tutorialId", COUNT(*)::int as comment_count
+          FROM "Comment"
+          GROUP BY "tutorialId"
+        ) c ON t.id = c."tutorialId"
+        WHERE t.published = true
+        ORDER BY engagement_score DESC
+        LIMIT ${limit} OFFSET ${(page - 1) * limit}
+      `;
+
+      if (rawResults.length === 0) {
+        tutorials = [];
+        total = 0;
+      } else {
+        const ids = rawResults.map((r) => r.id);
+        // Fetch the full tutorial records by IDs, preserving order from engagement score
+        const tutorialMap = new Map();
+        tutorials = await prisma.tutorial.findMany({
+          where: { id: { in: ids } },
+          include: {
+            author: { select: { id: true, name: true } },
+            _count: { select: { steps: true, comments: true } },
           },
-          _count: {
-            select: { steps: true },
+        });
+        // Preserve engagement-score order
+        tutorials.sort((a, b) => {
+          const scoreA = rawResults.find((r) => r.id === a.id)?.engagement_score ?? 0;
+          const scoreB = rawResults.find((r) => r.id === b.id)?.engagement_score ?? 0;
+          return Number(scoreB - scoreA);
+        });
+        total = await prisma.tutorial.count({ where });
+      }
+    } else {
+      [tutorials, total] = await Promise.all([
+        prisma.tutorial.findMany({
+          where,
+          include: {
+            author: { select: { id: true, name: true } },
+            _count: { select: { steps: true, comments: true } },
           },
-        },
-        orderBy,
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
-      prisma.tutorial.count({ where }),
-    ]);
+          orderBy,
+          skip: (page - 1) * limit,
+          take: limit,
+        }),
+        prisma.tutorial.count({ where }),
+      ]);
+    }
 
     return NextResponse.json({
       tutorials,
@@ -114,7 +155,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check title and description — hard violations block immediately, flagged content gets reviewed
+    // Check title and description — hard violations block immediately, flagged content gets review
     const titleCheck = filterContent(title);
     if (!titleCheck.clean) {
       return NextResponse.json({ error: "Your title contains prohibited content. Please revise." }, { status: 400 });

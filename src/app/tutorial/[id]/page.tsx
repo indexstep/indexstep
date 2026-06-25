@@ -74,6 +74,15 @@ export default async function TutorialPage({ params }: Props) {
   const user = await getCurrentUser();
   const isAdminOrAuthor = user && (user.role === "ADMIN" || user.role === "MODERATOR" || user.id === tutorial.authorId);
 
+  // Check if current user liked this tutorial
+  let likedByMe = false;
+  if (user) {
+    const like = await prisma.tutorialLike.findUnique({
+      where: { userId_tutorialId: { userId: user.id, tutorialId: id } },
+    });
+    likedByMe = !!like;
+  }
+
   // Check password protection — non-admins/authors get minimal data
   const tutorialPassword = await prisma.$queryRaw<{ password: string | null; linkOnly: boolean }[]>`SELECT password, "linkOnly" FROM "Tutorial" WHERE id = ${id}`;
   const hasPassword = tutorialPassword[0]?.password || null;
@@ -97,6 +106,7 @@ export default async function TutorialPage({ params }: Props) {
     ...tutorial,
     linkOnly: hasLinkOnly,
     viewCount: tutorial.viewCount + 1,
+    likedByMe,
     requiresPassword,
     isUnlocked: !requiresPassword,
     steps: requiresPassword ? [] : tutorial.steps,

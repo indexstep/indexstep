@@ -100,6 +100,15 @@ export async function GET(
     // Admins and authors can always see password-protected tutorials
     const isAdminOrAuthor = user && (user.role === "ADMIN" || user.role === "MODERATOR" || user.id === tutorial.authorId);
 
+    // Check if current user liked this tutorial
+    let likedByMe = false;
+    if (user) {
+      const like = await prisma.tutorialLike.findUnique({
+        where: { userId_tutorialId: { userId: user.id, tutorialId: id } },
+      });
+      likedByMe = !!like;
+    }
+
     if (tutorialPassword) {
       if (!isAdminOrAuthor) {
         // Return minimal info — no steps, no tools
@@ -109,12 +118,13 @@ export async function GET(
           linkOnly: tutorialLinkOnly,
           requiresPassword: true,
           isUnlocked: false,
+          likedByMe,
           author: tutorial.author,
         });
       }
     }
 
-    return NextResponse.json({ ...tutorial, linkOnly: tutorialLinkOnly, requiresPassword: false, isUnlocked: true });
+    return NextResponse.json({ ...tutorial, linkOnly: tutorialLinkOnly, likedByMe, requiresPassword: false, isUnlocked: true });
   } catch (error) {
     console.error("Error fetching tutorial:", error);
     return NextResponse.json(

@@ -45,6 +45,7 @@ export default function HomePage() {
       if (search) params.set("search", search);
       if (category) params.set("category", category);
       if (difficulty) params.set("difficulty", difficulty);
+      params.set("sort", sortBy);
       const res = await fetch(`/api/tutorials?${params}`);
       if (res.ok) {
         const data = await res.json();
@@ -114,6 +115,7 @@ export default function HomePage() {
               <option value="1">Easy</option><option value="2">Medium</option><option value="3">Hard</option><option value="4">Expert</option><option value="5">Master</option>
             </select>
             <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="px-3 py-2 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-sm text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] cursor-pointer">
+              <option value="popular">🔥 Most Popular</option>
               <option value="newest">Newest First</option>
               <option value="oldest">Oldest First</option>
             </select>

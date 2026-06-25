@@ -28,6 +28,7 @@ model User {
   reportsFiled     Report[]  @relation("Reporter")
   reportsReceived  Report[]  @relation("ReportedUser")
   purchases        Purchase[]
+  tutorialLikes    TutorialLike[]
 }
 
 enum Role {
@@ -45,6 +46,7 @@ model Tutorial {
   timeMinutes Int
   coverImage  String?
   viewCount   Int      @default(0)
+  likeCount   Int      @default(0)
   published   Boolean  @default(false)
   locked      Boolean  @default(false)
   lockContent Boolean  @default(false)
@@ -60,12 +62,23 @@ model Tutorial {
   reports     Report[]
   purchases   Purchase[]
   versions    TutorialVersion[]
+  likes       TutorialLike[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   editCount   Int      @default(0)
   lastEditAt  DateTime?
   isFlagged   Boolean  @default(false)
   flagReason  String?
+}
+
+model TutorialLike {
+  id          String   @id @default(cuid())
+  userId      String
+  tutorialId  String
+  tutorial    Tutorial @relation(fields: [tutorialId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, tutorialId])
 }
 
 model TutorialVersion {

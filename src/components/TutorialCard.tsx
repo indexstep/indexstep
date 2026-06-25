@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Clock, User, LayoutGrid, Lock, Calendar } from "lucide-react";
+import { Clock, User, LayoutGrid, Lock, Calendar, ThumbsUp } from "lucide-react";
 
 interface TutorialCardProps {
   tutorial: {
@@ -16,8 +16,9 @@ interface TutorialCardProps {
     lockContent: boolean;
     price: number;
     password?: string | null;
+    likeCount?: number;
     author: { name: string };
-    _count: { steps: number };
+    _count: { steps: number; comments?: number };
     createdAt: string;
   };
   purchased?: boolean;
@@ -104,6 +105,9 @@ export default function TutorialCard({ tutorial }: TutorialCardProps) {
             <div className="flex items-center gap-3">
               <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{formatTime(tutorial.timeMinutes)}</span>
               <span>{tutorial._count.steps} steps</span>
+              {(tutorial.likeCount ?? 0) > 0 && (
+                <span className="flex items-center gap-1"><ThumbsUp className="w-3.5 h-3.5" />{tutorial.likeCount}</span>
+              )}
             </div>
           </div>
         </div>

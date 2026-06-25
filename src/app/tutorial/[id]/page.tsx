@@ -54,7 +54,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function TutorialPage({ params }: Props) {
   const { id } = await params;
 
-  const tutorial = await prisma.tutorial.findUnique({
+  let tutorial;
+  try {
+    tutorial = await prisma.tutorial.findUnique({
+      where: { id },
+      include: {
+        author: { select: { id: true, name: true } },
+        tools: true,
+        steps: { orderBy: { order: "asc" } },
+      },
+    });
+  } catch (e: any) {
+    return <div className="min-h-screen flex items-center justify-center text-white">Database error: {e.message}</div>;
+  }
+
+  if (!tutorial) notFound();
     where: { id },
     include: {
       author: { select: { id: true, name: true } },

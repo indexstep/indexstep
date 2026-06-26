@@ -9,6 +9,7 @@ interface User {
   role: "USER" | "MODERATOR" | "ADMIN";
   profilePicture?: string | null;
   backgroundImage?: string | null;
+  backgroundPosition?: string | null; // JSON string {"x":50,"y":50}
   age?: number | null;
   gender?: string | null;
   country?: string | null;

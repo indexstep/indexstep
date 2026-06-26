@@ -56,6 +56,7 @@ export async function getCurrentUser() {
       banned: true,
       profilePicture: true,
       backgroundImage: true,
+      backgroundPosition: true,
     },
   });
 

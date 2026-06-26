@@ -42,7 +42,8 @@ export async function POST(request: NextRequest) {
 
     const ext = file.name.split(".").pop() || "jpg";
     const filename = `${uuidv4()}.${ext}`;
-    const filepath = path.join(process.cwd(), "public", "uploads", filename);
+    // Store in /home/stephud/uploads/ (outside .next build) so nginx can serve without caching issues
+    const filepath = path.join("/home/stephud", "uploads", filename);
 
     await writeFile(filepath, buffer);
 

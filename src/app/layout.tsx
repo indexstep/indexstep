@@ -17,6 +17,9 @@ export const metadata: Metadata = {
     template: "%s | stephud",
   },
   description: "Create and follow step-by-step visual guides for DIY, cooking, tech, crafts, and more.",
+  icons: {
+    icon: ["/favicon.ico", "/icon.png"],
+  },
   openGraph: {
     type: "website",
     siteName: "stephud",

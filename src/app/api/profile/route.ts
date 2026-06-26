@@ -7,7 +7,7 @@ export async function PUT(request: NextRequest) {
   try {
     const user = await requireAuth();
     const body = await request.json();
-    const { name, email, profilePicture, backgroundImage, age, gender, country } = body;
+    const { name, email, profilePicture, backgroundImage, backgroundPosition, age, gender, country } = body;
 
     if (!name?.trim()) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
@@ -33,6 +33,7 @@ export async function PUT(request: NextRequest) {
         ...(email && { email }),
         ...(profilePicture !== undefined && { profilePicture }),
         ...(backgroundImage !== undefined && { backgroundImage }),
+        ...(backgroundPosition !== undefined && { backgroundPosition }),
         ...(age !== undefined && { age: age ? parseInt(age) : null }),
         ...(gender !== undefined && { gender: gender || null }),
         ...(country !== undefined && { country: country || null }),
@@ -44,6 +45,7 @@ export async function PUT(request: NextRequest) {
         role: true,
         profilePicture: true,
         backgroundImage: true,
+        backgroundPosition: true,
         age: true,
         gender: true,
         country: true,

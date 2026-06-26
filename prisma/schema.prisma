@@ -4,6 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -15,7 +16,8 @@ model User {
   banned           Boolean   @default(false)
   banReason        String?
   profilePicture   String?
-  backgroundImage  String?
+  backgroundImage     String?
+  backgroundPosition String? // JSON string: {"x":50,"y":50} (percentages)
   createdAt        DateTime  @default(now())
   ipAddress        String?
   termsAcceptedAt  DateTime?
@@ -75,6 +77,7 @@ model TutorialLike {
   id          String   @id @default(cuid())
   userId      String
   tutorialId  String
+  user        User     @relation(fields: [userId], references: [id])
   tutorial    Tutorial @relation(fields: [tutorialId], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now())
 

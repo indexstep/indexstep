@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import Button from "@/components/Button";
 import Input from "@/components/Input";
 import Modal from "@/components/Modal";
 import { useToast } from "@/components/Toast";
-import { User, Settings, BookOpen, Edit2, Trash2, Plus, Eye, Grid, List, Save, Shield, AlertCircle, Camera, Image as ImageIcon, Lock } from "lucide-react";
+import { User, Settings, BookOpen, Edit2, Trash2, Plus, Eye, Grid, List, Save, Shield, AlertCircle, Camera, Image as ImageIcon, Lock, ExternalLink } from "lucide-react";
 import Link from "next/link";
 
 interface Tutorial {
@@ -62,6 +62,18 @@ export default function ProfilePage() {
   // Image upload states
   const [profilePicture, setProfilePicture] = useState("");
   const [backgroundImage, setBackgroundImage] = useState("");
+  const [bgNaturalDimensions, setBgNaturalDimensions] = useState<{width: number; height: number} | null>(null);
+  const [bgContainerSize, setBgContainerSize] = useState<{width: number; height: number} | null>(null);
+  const bgContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Background drag-to-reposition state
+  const [bgPosition, setBgPosition] = useState<{x: number; y: number}>({ x: 50, y: 50 }); // percentages
+  const [repositionMode, setRepositionMode] = useState(false); // is user in reposition mode?
+  const [showInfo, setShowInfo] = useState(false); // show dimension info?
+  const isDraggingRef = useRef(false);
+  const dragStartRef = useRef<{x: number; y: number} | null>(null);
+  const positionStartRef = useRef<{x: number; y: number} | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const [uploadingProfile, setUploadingProfile] = useState(false);
   const [uploadingBg, setUploadingBg] = useState(false);
 
@@ -80,6 +92,13 @@ export default function ProfilePage() {
       setEditEmail(user.email);
       setProfilePicture(user.profilePicture || "");
       setBackgroundImage(user.backgroundImage || "");
+      // Load saved background position
+      if (user.backgroundPosition) {
+        try {
+          const pos = JSON.parse(user.backgroundPosition);
+          setBgPosition(pos);
+        } catch { /* use default 50,50 */ }
+      }
       // @ts-ignore - age/gender/country may not exist on user type yet
       setEditAge(user.age ? String(user.age) : "");
       // @ts-ignore
@@ -90,6 +109,53 @@ export default function ProfilePage() {
       loadPreferences();
     }
   }, [user]);
+
+  // Track background container size with ResizeObserver
+  useEffect(() => {
+    if (!bgContainerRef.current) return;
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (entry) {
+        setBgContainerSize({ width: entry.contentRect.width, height: entry.contentRect.height });
+      }
+    });
+    observer.observe(bgContainerRef.current);
+    // Set initial size
+    const r = bgContainerRef.current.getBoundingClientRect();
+    setBgContainerSize({ width: r.width, height: r.height });
+    return () => observer.disconnect();
+  }, [backgroundImage]);
+
+  // Window-level drag tracking — drag continues anywhere on the page
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDraggingRef.current || !bgContainerRef.current) return;
+      const dx = e.clientX - (dragStartRef.current?.x ?? 0);
+      const dy = e.clientY - (dragStartRef.current?.y ?? 0);
+      const containerWidth = bgContainerRef.current.getBoundingClientRect().width;
+      const containerHeight = bgContainerRef.current.getBoundingClientRect().height;
+      const startPos = positionStartRef.current ?? { x: 50, y: 50 };
+      const newX = Math.max(0, Math.min(100, startPos.x - (dx / containerWidth) * 100));
+      const newY = Math.max(0, Math.min(100, startPos.y - (dy / containerHeight) * 100));
+      setBgPosition({ x: newX, y: newY });
+    };
+
+    const handleMouseUp = () => {
+      if (isDraggingRef.current) {
+        isDraggingRef.current = false;
+        setIsDragging(false);
+        dragStartRef.current = null;
+        positionStartRef.current = null;
+      }
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, []); // empty deps — listeners always active, refs control behaviour
 
   // Load purchases when switching to library tab
   useEffect(() => {
@@ -178,7 +244,6 @@ export default function ProfilePage() {
       const url = await uploadImage(file, "profile");
       console.log("Upload returned URL:", url);
       if (url) {
-        setProfilePicture(url);
         // Auto-save profile picture to database
         const res = await fetch("/api/profile", {
           method: "PUT",
@@ -187,15 +252,18 @@ export default function ProfilePage() {
             name: user?.name, 
             email: user?.email,
             profilePicture: url,
-            backgroundImage: backgroundImage || null,
+            backgroundImage: backgroundImage || undefined,
+            backgroundPosition: JSON.stringify(bgPosition),
           }),
         });
         console.log("Profile API response status:", res.status);
         if (res.ok) {
           const data = await res.json();
           console.log("Profile API response data:", data);
-          try { await refresh(); } catch (e) { console.error("Refresh failed:", e); }
+          setProfilePicture(url); // Update state immediately for instant feedback
           showToast("Profile picture saved!", "success");
+          // Force full page reload so all server data is fresh
+          setTimeout(() => window.location.reload(), 500);
         } else {
           const data = await res.json().catch(() => ({}));
           console.error("Profile update failed:", data);
@@ -225,7 +293,6 @@ export default function ProfilePage() {
       const url = await uploadImage(file, "background");
       console.log("Background upload returned URL:", url);
       if (url) {
-        setBackgroundImage(url);
         // Auto-save background to database
         const res = await fetch("/api/profile", {
           method: "PUT",
@@ -233,16 +300,20 @@ export default function ProfilePage() {
           body: JSON.stringify({ 
             name: user?.name, 
             email: user?.email,
-            profilePicture: profilePicture || null,
+            profilePicture: profilePicture || undefined,
             backgroundImage: url,
+            backgroundPosition: JSON.stringify({ x: 50, y: 50 }), // reset position for new image
           }),
         });
         console.log("Background Profile API response status:", res.status);
         if (res.ok) {
           const data = await res.json();
           console.log("Background Profile API response data:", data);
-          try { await refresh(); } catch (e) { console.error("Refresh failed:", e); }
+          setBackgroundImage(url); // Update state immediately for instant feedback
+          setBgPosition({ x: 50, y: 50 }); // Reset position for new image
           showToast("Background image saved!", "success");
+          // Force full page reload so all server data is fresh
+          setTimeout(() => window.location.reload(), 500);
         } else {
           const data = await res.json().catch(() => ({}));
           console.error("Background update failed:", data);
@@ -257,6 +328,22 @@ export default function ProfilePage() {
       showToast("Failed to save background", "error");
     } finally {
       setUploadingBg(false);
+    }
+  };
+
+  const saveBackgroundPosition = async (pos: {x: number; y: number}) => {
+    try {
+      await fetch("/api/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          name: user?.name, 
+          email: user?.email,
+          backgroundPosition: JSON.stringify(pos),
+        }),
+      });
+    } catch (err) {
+      console.error("Failed to save background position:", err);
     }
   };
 
@@ -316,21 +403,70 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-[var(--bg)]">
-      {/* Profile Header with Background */}
-      <div className="relative h-40 md:h-52 overflow-hidden">
-        {backgroundImage ? (
-          <img src={backgroundImage} alt="" className="w-full h-full object-cover" />
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent)]/30 via-[var(--bg-secondary)] to-[var(--bg)]" />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg)] via-transparent to-transparent" />
+      {/* Profile Header with Background - YouTube-style banner */}
+      <div
+        ref={bgContainerRef}
+        className={`relative h-64 md:h-96 lg:h-[500px] select-none ${repositionMode ? (isDragging ? "cursor-grabbing" : "cursor-grab") : "cursor-default"}`}
+        onMouseDown={(e) => {
+          if (!backgroundImage || !bgContainerRef.current || !repositionMode) return;
+          e.preventDefault();
+          isDraggingRef.current = true;
+          setIsDragging(true);
+          dragStartRef.current = { x: e.clientX, y: e.clientY };
+          positionStartRef.current = { ...bgPosition };
+        }}
+      >
+        {/* Banner image */}
+        <div className="absolute inset-0 overflow-hidden">
+          {backgroundImage ? (
+            <img
+              src={backgroundImage}
+              alt=""
+              className="w-full h-full"
+              style={{ objectFit: "cover", objectPosition: `${bgPosition.x}% ${bgPosition.y}%` }}
+              draggable={false}
+              onLoad={(e) => {
+                const img = e.currentTarget;
+                setBgNaturalDimensions({ width: img.naturalWidth, height: img.naturalHeight });
+                if (bgContainerRef.current) {
+                  const r = bgContainerRef.current.getBoundingClientRect();
+                  setBgContainerSize({ width: r.width, height: r.height });
+                }
+              }}
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-[var(--accent)]/20 via-[var(--bg-secondary)]/50 to-[var(--bg)]" />
+          )}
+        </div>
 
-        {/* Background upload button */}
-        <label className="absolute top-4 right-4 flex items-center gap-2 px-3 py-1.5 bg-black/50 backdrop-blur-sm rounded-lg cursor-pointer hover:bg-black/70 transition-colors z-10">
-          <ImageIcon className="w-4 h-4 text-white" />
-          <span className="text-sm text-white">Change Cover</span>
-          <input type="file" accept="image/*" onChange={handleBackgroundChange} className="hidden" />
-        </label>
+        {/* Bottom gradient */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+
+        {/* Info badge */}
+        {showInfo && backgroundImage && bgNaturalDimensions && (
+          <div className="absolute bottom-3 left-3 px-3 py-2 bg-black/50 backdrop-blur-sm rounded-lg text-xs text-white font-mono space-y-1 z-20">
+            <div><span className="text-gray-400">Original:</span> {bgNaturalDimensions.width} × {bgNaturalDimensions.height}</div>
+            <div><span className="text-gray-400">Visible:</span> {bgContainerSize ? Math.round(bgContainerSize.width) : "—"} × {bgContainerSize ? Math.round(bgContainerSize.height) : "—"}</div>
+            <div><span className="text-gray-400">Position:</span> {Math.round(bgPosition.x)}%, {Math.round(bgPosition.y)}%</div>
+            {repositionMode && <div className="text-[var(--accent)]">✋ Dragging enabled</div>}
+          </div>
+        )}
+
+        {/* Reposition drag hint overlay */}
+        {repositionMode && !isDragging && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+            <div className="px-5 py-2.5 bg-black/60 backdrop-blur-sm rounded-lg text-white text-sm font-medium">
+              Click and drag to reposition · Open <span className="text-[var(--accent)]">Cover Options</span> to save
+            </div>
+          </div>
+        )}
+        {repositionMode && isDragging && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+            <div className="px-5 py-2.5 bg-[var(--accent)]/90 backdrop-blur-sm rounded-lg text-[#0f0f14] text-sm font-bold">
+              Repositioning... release mouse to stop
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -372,6 +508,103 @@ export default function ProfilePage() {
                   <Button variant="ghost" size="sm" onClick={() => setEditMode(false)}>Cancel</Button>
                   <Button size="sm" onClick={updateProfile} loading={saving}><Save className="w-4 h-4 mr-1.5" />Save</Button>
                 </>
+              )}
+
+              {/* Cover Options dropdown */}
+              {backgroundImage && (
+                <div className="relative">
+                  <button
+                    onClick={() => setShowInfo(!showInfo)}
+                    className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                      showInfo
+                        ? "bg-[var(--accent)] text-[#0f0f14]"
+                        : "bg-[var(--bg-highlight)] text-[var(--text-secondary)] hover:text-[var(--text)]"
+                    }`}
+                  >
+                    <ImageIcon className="w-4 h-4" />
+                    Cover Options
+                  </button>
+
+                  {/* Dropdown */}
+                  {showInfo && (
+                    <div className="absolute right-0 top-full mt-2 w-72 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl shadow-xl overflow-hidden z-30">
+
+                      {/* Cover Preview Grid */}
+                      <div className="p-3 border-b border-[var(--border)]">
+                        <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider mb-2 font-semibold">Cover Preview</p>
+                        <div className="relative w-full rounded-lg overflow-hidden border border-[var(--border)]" style={{ height: "80px" }}>
+                          <img
+                            src={backgroundImage}
+                            alt="Cover"
+                            className="w-full h-full"
+                            style={{ objectFit: "cover", objectPosition: `${bgPosition.x}% ${bgPosition.y}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Info section */}
+                      {bgNaturalDimensions && (
+                        <div className="px-4 py-3 border-b border-[var(--border)]">
+                          <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider mb-2 font-semibold">Image Info</p>
+                          <div className="space-y-1 text-xs text-[var(--text-secondary)]">
+                            <div className="flex justify-between"><span>Original:</span><span className="font-mono">{bgNaturalDimensions.width} × {bgNaturalDimensions.height}</span></div>
+                            <div className="flex justify-between"><span>Visible:</span><span className="font-mono">{bgContainerSize ? Math.round(bgContainerSize.width) : "?"} × {bgContainerSize ? Math.round(bgContainerSize.height) : "?"}</span></div>
+                            <div className="flex justify-between"><span>Position:</span><span className="font-mono">{Math.round(bgPosition.x)}%, {Math.round(bgPosition.y)}%</span></div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Menu items */}
+                      <div className="py-1">
+                        <button
+                          onClick={() => {
+                            setRepositionMode(!repositionMode);
+                            if (!repositionMode) setShowInfo(true);
+                          }}
+                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
+                            repositionMode
+                              ? "bg-[var(--accent)] text-[#0f0f14] font-medium"
+                              : "text-[var(--text-secondary)] hover:bg-[var(--bg-highlight)] hover:text-[var(--text)]"
+                          }`}
+                        >
+                          <span className="text-base">✋</span>
+                          <span>{repositionMode ? "Exit Reposition" : "Reposition Cover"}</span>
+                          {repositionMode && <span className="ml-auto text-xs opacity-70">Active</span>}
+                        </button>
+
+                        {repositionMode && (
+                          <button
+                            onClick={() => {
+                              saveBackgroundPosition(bgPosition);
+                              setRepositionMode(false);
+                              showToast("Position saved!", "success");
+                            }}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-[#aad94c] hover:bg-[#aad94c]/10 transition-colors"
+                          >
+                            <Save className="w-4 h-4" />
+                            <span>Save Position</span>
+                          </button>
+                        )}
+
+                        <label className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-highlight)] hover:text-[var(--text)] cursor-pointer transition-colors">
+                          <ImageIcon className="w-4 h-4" />
+                          <span>Change Cover</span>
+                          <input type="file" accept="image/*" onChange={handleBackgroundChange} className="hidden" />
+                        </label>
+
+                        <a
+                          href={`/user/${user?.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-highlight)] hover:text-[var(--text)] transition-colors"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                          <span>View as Visitor</span>
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>

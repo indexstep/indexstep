@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { User, ArrowLeft, Flag, BookOpen, Calendar } from "lucide-react";
+import { User, ArrowLeft, Flag, BookOpen, Calendar, Award } from "lucide-react";
 import Button from "@/components/Button";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -29,12 +29,32 @@ interface Tutorial {
   createdAt: string;
 }
 
+interface Badge {
+  id: string;
+  name: string;
+  description: string | null;
+  icon: string | null;
+  color: string;
+  tier: string;
+  badgeType: string;
+  imageData: string | null;
+  imageUrl: string | null;
+}
+
+interface UserBadgeInfo {
+  id: string;
+  badgeId: string;
+  awardedAt: string;
+  badge: Badge;
+}
+
 export default function UserProfilePage() {
   const params = useParams();
   const router = useRouter();
   const { user } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [tutorials, setTutorials] = useState<Tutorial[]>([]);
+  const [userBadges, setUserBadges] = useState<UserBadgeInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportReason, setReportReason] = useState("");
@@ -63,6 +83,13 @@ export default function UserProfilePage() {
         const data = await tutorialsRes.json();
         const userTutorials = data.tutorials.filter((t: Tutorial) => t.author.name === profile?.name);
         setTutorials(userTutorials);
+      }
+
+      // Load user's badges
+      const badgesRes = await fetch(`/api/badges/users/${params.id}`);
+      if (badgesRes.ok) {
+        const badgesData = await badgesRes.json();
+        setUserBadges(badgesData.badges || []);
       }
     } catch (error) {
       console.error("Failed to load profile:", error);
@@ -171,6 +198,65 @@ export default function UserProfilePage() {
             )}
           </div>
         </div>
+
+        {/* User's Badges */}
+        {userBadges.length > 0 && (
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <h2 className="text-lg font-semibold text-[var(--text)]">
+                <span className="flex items-center gap-2">
+                  <Award className="w-5 h-5 text-[var(--accent)]" />
+                  Badges
+                </span>
+              </h2>
+              <span className="text-sm text-[var(--text-muted)]">{userBadges.length} earned</span>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              {userBadges.map((ub) => {
+                const hasImage = !!(ub.badge.imageData || ub.badge.imageUrl);
+                const color = { common: "#94a3b8", rare: "#3b82f6", epic: "#a855f7", legendary: "#f59e0b" }[ub.badge.tier] || "#94a3b8";
+                return (
+                  <div
+                    key={ub.id}
+                    title={`${ub.badge.name}${ub.badge.description ? ` — ${ub.badge.description}` : ""}`}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      padding: "8px 14px",
+                      background: "var(--bg-secondary)",
+                      border: `1px solid ${color}50`,
+                      borderRadius: 10,
+                      boxShadow: `0 0 8px ${color}20`,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: 8,
+                        background: hasImage ? `center/cover no-repeat url(${ub.badge.imageData || ub.badge.imageUrl})` : ub.badge.color,
+                        border: `1.5px solid ${color}`,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 18,
+                        flexShrink: 0,
+                        ...(hasImage ? {} : { background: ub.badge.color }),
+                      }}
+                    >
+                      {!hasImage && ub.badge.icon && <span>{ub.badge.icon}</span>}
+                    </div>
+                    <div>
+                      <p style={{ color: "var(--text)", fontSize: 14, fontWeight: 600, margin: 0 }}>{ub.badge.name}</p>
+                      <p style={{ color, fontSize: 11, fontWeight: 600, textTransform: "uppercase", margin: 0 }}>{ub.badge.tier}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* User's Tutorials */}
         <div>

@@ -127,6 +127,17 @@ export default function AdminPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>("dashboard");
+
+  // Support ?tab=badges link from profile dropdown
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get("tab");
+      if (tab === "badges" || tab === "users" || tab === "tutorials" || tab === "reports" || tab === "logs" || tab === "dashboard" || tab === "postasuser" || tab === "analytics") {
+        setActiveTab(tab as Tab);
+      }
+    }
+  }, []);
   const [stats, setStats] = useState<Stats | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [tutorials, setTutorials] = useState<Tutorial[]>([]);

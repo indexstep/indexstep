@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import Button from "./Button";
-import { Menu, X, User, LogOut, Settings, Sun, Moon } from "lucide-react";
+import { Menu, X, User, LogOut, Settings, Sun, Moon, Award } from "lucide-react";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -101,6 +101,17 @@ export default function Navbar() {
                       <Settings className="w-4 h-4" />
                       Profile & Settings
                     </Link>
+                    {(user?.role === "ADMIN" || user?.role === "MODERATOR") && (
+                      <Link
+                        href="/admin?tab=badges"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2 transition-colors"
+                        style={{ color: "var(--accent)" }}
+                      >
+                        <Award className="w-4 h-4" />
+                        Manage Badges
+                      </Link>
+                    )}
                     <button
                       onClick={handleLogout}
                       className="w-full flex items-center gap-2 px-4 py-2 transition-colors"
@@ -149,6 +160,7 @@ export default function Navbar() {
             {user && (
               <>
                 <Link href="/create" className="block" style={{ color: "var(--text-secondary)" }} onClick={() => setMenuOpen(false)}>Create Guide</Link>
+                <Link href="/badges" className="block" style={{ color: "var(--text-secondary)" }} onClick={() => setMenuOpen(false)}>Badges</Link>
                 <Link href="/profile" className="block" style={{ color: "var(--text-secondary)" }} onClick={() => setMenuOpen(false)}>My Profile</Link>
                 {(user.role === "ADMIN" || user.role === "MODERATOR") && (
                   <Link href="/admin" style={{ color: "var(--accent)" }} onClick={() => setMenuOpen(false)}>Admin Panel</Link>

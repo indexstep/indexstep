@@ -7,7 +7,7 @@ import Button from "@/components/Button";
 import Input from "@/components/Input";
 import Modal from "@/components/Modal";
 import { useToast } from "@/components/Toast";
-import { User, Settings, BookOpen, Edit2, Trash2, Plus, Eye, Grid, List, Save, Shield, AlertCircle, Camera, Image as ImageIcon, Lock, ExternalLink } from "lucide-react";
+import { User, Settings, BookOpen, Edit2, Trash2, Plus, Eye, Grid, List, Save, Shield, AlertCircle, Camera, Image as ImageIcon, Lock, ExternalLink, Award } from "lucide-react";
 import Link from "next/link";
 
 interface Tutorial {
@@ -45,7 +45,7 @@ export default function ProfilePage() {
   const { user, loading: authLoading, refresh, logout } = useAuth();
   const { showToast } = useToast();
 
-  const [activeTab, setActiveTab] = useState<"overview" | "tutorials" | "library" | "settings">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "tutorials" | "library" | "badges" | "settings">("overview");
   const [tutorials, setTutorials] = useState<Tutorial[]>([]);
   const [stats, setStats] = useState<UserStats | null>(null);
   const [purchases, setPurchases] = useState<PurchaseEntry[]>([]);
@@ -642,6 +642,7 @@ export default function ProfilePage() {
             { id: "overview", label: "Overview", icon: BookOpen },
             { id: "tutorials", label: "My Tutorials", icon: BookOpen },
             { id: "library", label: "Library", icon: Lock },
+            { id: "badges", label: "Badges", icon: Award },
             { id: "settings", label: "Preferences", icon: Settings },
           ].map((tab) => (
             <button
@@ -805,6 +806,11 @@ export default function ProfilePage() {
           </div>
         )}
 
+        {/* Badges Tab */}
+        {activeTab === "badges" && (
+          <BadgesTab userId={user!.id} />
+        )}
+
         {/* Settings Tab */}
         {activeTab === "settings" && (
           <div className="space-y-6">
@@ -899,6 +905,186 @@ export default function ProfilePage() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// Badges Tab Component
+// ─────────────────────────────────────────────
+function BadgesTab({ userId }: { userId: string }) {
+  const [userBadges, setUserBadges] = useState<Array<{ id: string; badgeId: string; awardedAt: string; note: string | null; badge: { id: string; name: string; description: string | null; icon: string | null; color: string; tier: string; badgeType: string; imageData: string | null; imageUrl: string | null } }>>([]);
+  const [loading, setLoading] = useState(true);
+  const [detailBadge, setDetailBadge] = useState<typeof userBadges[0] | null>(null);
+
+  const TIER_COLORS: Record<string, string> = { common: "#94a3b8", rare: "#3b82f6", epic: "#a855f7", legendary: "#f59e0b" };
+
+  useEffect(() => {
+    fetch(`/api/badges/users/${userId}`)
+      .then((r) => r.ok ? r.json() : { badges: [] })
+      .then((d) => setUserBadges(d.badges || []))
+      .catch(() => setUserBadges([]))
+      .finally(() => setLoading(false));
+  }, [userId]);
+
+  const byTier = ["legendary", "epic", "rare", "common"].reduce((acc, tier) => {
+    acc[tier] = userBadges.filter((ub) => ub.badge.tier === tier);
+    return acc;
+  }, {} as Record<string, typeof userBadges>);
+
+  const tierLabels: Record<string, string> = { common: "Common", rare: "Rare", epic: "Epic", legendary: "Legendary" };
+
+  if (loading) return <div className="text-center py-16 text-[var(--text-secondary)]">Loading...</div>;
+
+  if (userBadges.length === 0) {
+    return (
+      <div className="text-center py-16">
+        <div className="text-5xl mb-4">🏆</div>
+        <h3 className="text-lg font-semibold text-[var(--text)] mb-2">No badges yet</h3>
+        <p className="text-sm text-[var(--text-secondary)]400">Complete achievements on stephud to earn badges!</p>
+        <Link href="/badges" className="mt-4 inline-block px-4 py-2 bg-[var(--accent)]-500 text-white text-sm font-medium rounded-lg hover:bg-[var(--accent)]-600 transition-colors">
+          View All Badges →
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-[var(--text)]">
+          {userBadges.length} badge{userBadges.length !== 1 ? "s" : ""} earned
+        </h2>
+        <Link href="/badges" className="text-sm text-[var(--accent)] hover:underline">
+          View all badges →
+        </Link>
+      </div>
+
+      {["legendary", "epic", "rare", "common"].map((tier) => {
+        const badges = byTier[tier];
+        if (!badges || badges.length === 0) return null;
+        const color = TIER_COLORS[tier];
+
+        return (
+          <div key={tier}>
+            <div className="flex items-center gap-3 mb-4">
+              <h3 style={{ color, margin: 0, fontSize: 14, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                {tierLabels[tier]}
+              </h3>
+              <div style={{ flex: 1, height: 1, background: color + "30" }} />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {badges.map((ub) => {
+                const hasImage = !!(ub.badge.imageData || ub.badge.imageUrl);
+                return (
+                  <div
+                    key={ub.id}
+                    onClick={() => setDetailBadge(ub)}
+                    className="cursor-pointer transition-all duration-150 hover:scale-[1.02]"
+                    style={{
+                      background: "var(--bg-secondary)",
+                      border: `1px solid ${color}50`,
+                      borderRadius: 14,
+                      padding: "20px 16px",
+                    }}
+                    onMouseOver={(e) => {
+                      (e.currentTarget as HTMLElement).style.borderColor = color + "90";
+                      (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)";
+                    }}
+                    onMouseOut={(e) => {
+                      (e.currentTarget as HTMLElement).style.borderColor = color + "50";
+                      (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
+                    }}
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      <div
+                        style={{
+                          width: 48, height: 48, borderRadius: 12,
+                          background: hasImage ? `center/cover no-repeat url(${ub.badge.imageData || ub.badge.imageUrl})` : ub.badge.color,
+                          border: `2px solid ${color}`,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          fontSize: 24, flexShrink: 0,
+                          boxShadow: `0 0 10px ${color}30`,
+                          ...(hasImage ? {} : { background: ub.badge.color }),
+                        }}
+                      >
+                        {!hasImage && ub.badge.icon && <span>{ub.badge.icon}</span>}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-[var(--text)] truncate">{ub.badge.name}</p>
+                        <p className="text-xs mt-0.5" style={{ color }}>
+                          ✓ Earned
+                        </p>
+                      </div>
+                    </div>
+                    {ub.badge.description && (
+                      <p className="text-xs text-[var(--text-secondary)]400 line-clamp-2" style={{ lineHeight: 1.5 }}>
+                        {ub.badge.description}
+                      </p>
+                    )}
+                    {ub.awardedAt && (
+                      <p className="text-xs text-[var(--text-secondary)]500 mt-2">
+                        {new Date(ub.awardedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+
+      {detailBadge && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+          onClick={(e) => e.target === e.currentTarget && setDetailBadge(null)}
+        >
+          <div
+            style={{
+              background: "var(--bg-secondary)",
+              border: `1px solid ${TIER_COLORS[detailBadge.badge.tier]}50`,
+              borderRadius: 20, padding: 32, width: 400, maxWidth: "90vw", textAlign: "center",
+              boxShadow: `0 0 40px ${TIER_COLORS[detailBadge.badge.tier]}20`,
+            }}
+          >
+            <div
+              style={{
+                width: 80, height: 80, borderRadius: "50%",
+                background: detailBadge.badge.imageData || detailBadge.badge.imageUrl
+                  ? `center/cover no-repeat url(${detailBadge.badge.imageData || detailBadge.badge.imageUrl})`
+                  : detailBadge.badge.color,
+                border: `3px solid ${TIER_COLORS[detailBadge.badge.tier]}`,
+                margin: "0 auto 20px", display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 40, boxShadow: `0 0 20px ${TIER_COLORS[detailBadge.badge.tier]}40`,
+                ...(detailBadge.badge.imageData || detailBadge.badge.imageUrl ? {} : { background: detailBadge.badge.color }),
+              }}
+            >
+              {!(detailBadge.badge.imageData || detailBadge.badge.imageUrl) && detailBadge.badge.icon && <span>{detailBadge.badge.icon}</span>}
+            </div>
+            <h2 style={{ color: "var(--text)", margin: "0 0 8px 0", fontSize: 20, fontWeight: 700 }}>{detailBadge.badge.name}</h2>
+            <span style={{ padding: "2px 10px", background: `${TIER_COLORS[detailBadge.badge.tier]}20`, color: TIER_COLORS[detailBadge.badge.tier], borderRadius: 20, fontSize: 12, fontWeight: 600, textTransform: "uppercase" }}>
+              {tierLabels[detailBadge.badge.tier]}
+            </span>
+            {detailBadge.badge.description && (
+              <p style={{ color: "var(--text-secondary)", margin: "12px 0 0 0", fontSize: 14, lineHeight: 1.6 }}>{detailBadge.badge.description}</p>
+            )}
+            {detailBadge.note && (
+              <p style={{ color: "var(--text-secondary)", fontSize: 13, fontStyle: "italic", margin: "12px 0 0 0" }}>&ldquo;{detailBadge.note}&rdquo;</p>
+            )}
+            <p style={{ color: "var(--text-secondary)", fontSize: 12, margin: "16px 0 0 0" }}>
+              Earned {new Date(detailBadge.awardedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+            </p>
+            <button
+              onClick={() => setDetailBadge(null)}
+              style={{ width: "100%", marginTop: 20, padding: "12px", background: "var(--bg)", color: "var(--text-secondary)", border: "1px solid var(--border)", borderRadius: 10, cursor: "pointer", fontSize: 14 }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

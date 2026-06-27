@@ -31,6 +31,7 @@ model User {
   reportsReceived  Report[]  @relation("ReportedUser")
   purchases        Purchase[]
   tutorialLikes    TutorialLike[]
+  badges           UserBadge[]
 }
 
 enum Role {
@@ -82,6 +83,37 @@ model TutorialLike {
   createdAt   DateTime @default(now())
 
   @@unique([userId, tutorialId])
+}
+
+model Badge {
+  id          String      @id @default(cuid())
+  name        String
+  description String?
+  icon        String?     // emoji
+  color       String      @default("#3b82f6")
+  badgeType   String      @default("custom")  // custom, milestone, system
+  tier        String      @default("common")  // common, rare, epic, legendary
+  criteria    Json        @default("{}")
+  imageUrl    String?
+  imageData   String?     // base64
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  userBadges  UserBadge[]
+}
+
+model UserBadge {
+  id         String   @id @default(cuid())
+  userId     String
+  badgeId    String
+  awardedAt DateTime @default(now())
+  note       String?
+  awardedBy  String?
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge      Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
+  @@index([userId])
+  @@index([badgeId])
 }
 
 model TutorialVersion {

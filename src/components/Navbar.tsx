@@ -53,6 +53,9 @@ export default function Navbar() {
                 <Link href="/create" className="hover:opacity-80 transition-colors" style={{ color: "var(--text-secondary)" }}>
                   Create Guide
                 </Link>
+                <Link href="/badges" className="hover:opacity-80 transition-colors" style={{ color: "var(--text-secondary)" }}>
+                  Badges
+                </Link>
                 <Link href="/profile" className="hover:opacity-80 transition-colors" style={{ color: "var(--text-secondary)" }}>
                   My Profile
                 </Link>

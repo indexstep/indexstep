@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import Button from "./Button";
-import { Menu, X, User, LogOut, Settings, Sun, Moon, Award } from "lucide-react";
+import { Menu, X, User, LogOut, Settings, Sun, Moon, Award, GitBranch } from "lucide-react";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -50,8 +50,8 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             {user && (
               <>
-                <Link href="/create" className="hover:opacity-80 transition-colors" style={{ color: "var(--text-secondary)" }}>
-                  Create Guide
+                <Link href="/specs" className="flex items-center gap-1.5 hover:opacity-80 transition-colors" style={{ color: "var(--text-secondary)" }}>
+                  <GitBranch className="w-4 h-4" /> Specs
                 </Link>
                 <Link href="/badges" className="hover:opacity-80 transition-colors" style={{ color: "var(--text-secondary)" }}>
                   Badges
@@ -156,6 +156,9 @@ export default function Navbar() {
               {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
               {theme === "dark" ? "Light Mode" : "Dark Mode"}
             </button>
+            <Link href="/specs" className="flex items-center gap-2 block" style={{ color: "var(--text-secondary)" }} onClick={() => setMenuOpen(false)}>
+              <GitBranch className="w-4 h-4" /> Specs
+            </Link>
             <Link href="/" className="block" style={{ color: "var(--text-secondary)" }} onClick={() => setMenuOpen(false)}>Browse</Link>
             {user && (
               <>

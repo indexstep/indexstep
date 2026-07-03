@@ -145,8 +145,8 @@ export default function SpecsPage() {
                 <p className="text-sm" style={{ color: "var(--text-muted)" }}>Tree-based specs and documentation</p>
               </div>
             </div>
-            <Button onClick={openNewSpec}>
-              <Plus className="w-4 h-4 mr-1" /> New Spec
+            <Button onClick={openNewSpec} className="gap-2">
+              <Plus className="w-4 h-4" /> Create Spec
             </Button>
           </div>
         </div>

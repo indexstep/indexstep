@@ -1,7 +1,5 @@
 'use client';
 
-import Script from 'next/script';
-
 export default function BlogPage() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
@@ -17,11 +15,8 @@ export default function BlogPage() {
       {/* Trysora Blog - full width below header */}
       <div id="soro-blog"></div>
 
-      {/* Load Trysora embed immediately */}
-      <Script
-        src="https://app.trysoro.com/api/embed/e032356d-d466-44d0-ae71-708c0d90746d"
-        strategy="beforeInteractive"
-      />
+      {/* Trysora embed - plain script tag, placed after soro-blog div */}
+      <script src="https://app.trysoro.com/api/embed/e032356d-d466-44d0-ae71-708c0d90746d" async></script>
     </div>
   );
 }

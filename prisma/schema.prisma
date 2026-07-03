@@ -272,16 +272,16 @@ model SpecFollow {
 }
 
 model BlogPost {
-  id          String   @id @default(cuid())
+  id          String   @id @default(uuid())
   title       String
   slug        String   @unique
   excerpt     String?
-  content     String?  // full article content
+  content     String?
   imageUrl    String?
   authorName  String   @default("stephud")
   published   Boolean  @default(true)
   publishedAt DateTime?
-  trysoraId   String?  // original Trysora article ID
+  trysoraId   String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

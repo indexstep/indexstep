@@ -270,3 +270,18 @@ model SpecFollow {
 
   @@unique([userId, specId])
 }
+
+model BlogPost {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  excerpt     String?
+  content     String?  // full article content
+  imageUrl    String?
+  authorName  String   @default("stephud")
+  published   Boolean  @default(true)
+  publishedAt DateTime?
+  trysoraId   String?  // original Trysora article ID
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

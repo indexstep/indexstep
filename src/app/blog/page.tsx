@@ -17,13 +17,10 @@ export default function BlogPage() {
       {/* Trysora Blog - full width below header */}
       <div id="soro-blog"></div>
 
-      {/* Load Trysora embed after page is interactive */}
+      {/* Load Trysora embed immediately */}
       <Script
         src="https://app.trysoro.com/api/embed/e032356d-d466-44d0-ae71-708c0d90746d"
-        strategy="afterInteractive"
-        onLoad={() => {
-          console.log('Trysora blog loaded');
-        }}
+        strategy="beforeInteractive"
       />
     </div>
   );

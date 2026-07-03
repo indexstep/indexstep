@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, Filter, Plus } from "lucide-react";
+import { Search, Filter, Plus, GitBranch } from "lucide-react";
 import TutorialCard from "@/components/TutorialCard";
 import Button from "@/components/Button";
 import { CATEGORIES } from "@/lib/types";
@@ -78,9 +78,21 @@ export default function HomePage() {
               Step-by-Step Guides,{" "}
               <span className="text-[var(--accent)]">Beautifully Organized</span>
             </h1>
-            <p className="text-lg text-[var(--text-secondary)] mb-10 max-w-xl mx-auto leading-relaxed">
+            <p className="text-lg text-[var(--text-secondary)] mb-6 max-w-xl mx-auto leading-relaxed">
               Create and follow visual tutorials with progress tracking, tool lists, and clear step-by-step instructions.
             </p>
+            <div className="flex flex-wrap items-center justify-center gap-3 mb-4">
+              <Link href="/specs">
+                <Button variant="secondary" size="sm" className="gap-2">
+                  <GitBranch className="w-4 h-4" /> Browse Specs
+                </Button>
+              </Link>
+              <Link href="/specs">
+                <Button variant="ghost" size="sm" className="gap-2">
+                  <GitBranch className="w-4 h-4" /> Create Spec
+                </Button>
+              </Link>
+            </div>
             <form onSubmit={handleSearch} className="flex gap-3 max-w-xl mx-auto">
               <div className="relative flex-1">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-muted)]" />
@@ -130,8 +142,11 @@ export default function HomePage() {
                 <button onClick={() => setViewMode("list")} className={`px-3 py-2 text-sm transition-colors ${viewMode === "list" ? "bg-[var(--accent)] text-[#0f0f14]" : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"}`} title="List view">☰</button>
               </div>
               {user && (
+              <div className="flex items-center gap-2">
                 <Link href="/create"><Button size="sm"><Plus className="w-4 h-4 mr-1" />Create Guide</Button></Link>
-              )}
+                <Link href="/specs"><Button size="sm" variant="secondary"><GitBranch className="w-4 h-4 mr-1" />Create Spec</Button></Link>
+              </div>
+            )}
             </div>
           </div>
         </div>

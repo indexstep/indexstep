@@ -109,7 +109,7 @@ export default function BlogPage() {
 
       {/* Trysora Blog Embed */}
       <div id="soro-blog"></div>
-      <script src="https://app.trysoro.com/api/embed/1592d5ed-0588-4548-af12-7b6315528dee" defer></script>
+      <script src="https://app.trysoro.com/api/embed/e032356d-d466-44d0-ae71-708c0d90746d" defer></script>
     </div>
   );
 }

@@ -88,3 +88,13 @@ export const CATEGORIES = [
 ] as const;
 
 export type Category = (typeof CATEGORIES)[number];
+
+export interface SpecChild {
+  id: string;
+  name: string;
+  color: string;
+  icon: string | null;
+  imageUrl?: string | null;
+  _count: { children: number };
+  children?: SpecChild[];
+}

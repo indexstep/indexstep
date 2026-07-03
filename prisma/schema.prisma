@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -27,6 +26,7 @@ model User {
   tutorials        Tutorial[]
   comments         Comment[]
   logs             SystemLog[]
+  specs            Spec[]
   reportsFiled     Report[]  @relation("Reporter")
   reportsReceived  Report[]  @relation("ReportedUser")
   purchases        Purchase[]
@@ -224,4 +224,20 @@ enum ReportStatus {
   REVIEWED
   DISMISSED
   ACTIONED
+}
+
+model Spec {
+  id        String   @id @default(cuid())
+  name      String
+  details   String   @default("")
+  color     String   @default("#ff9940")
+  icon      String?
+  imageUrl  String?
+  parentId  String?
+  parent    Spec?    @relation("SpecChildren", fields: [parentId], references: [id])
+  children  Spec[]   @relation("SpecChildren")
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

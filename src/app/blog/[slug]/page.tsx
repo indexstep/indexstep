@@ -32,6 +32,17 @@ export default async function BlogPostPage({ params }: Props) {
 
   if (!post) notFound();
 
+  // Increment view count
+  await prisma.blogPost.update({
+    where: { id: post.id },
+    data: { viewCount: { increment: 1 } },
+  });
+
+  const formatViews = (count: number) => {
+    if (count >= 1000) return `${(count / 1000).toFixed(1)}k`;
+    return count.toString();
+  };
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -74,6 +85,8 @@ export default async function BlogPostPage({ params }: Props) {
                   year: 'numeric',
                 })}
           </span>
+          <span>·</span>
+          <span>👁 {formatViews(post.viewCount + 1)} views</span>
         </div>
 
         {post.content ? (

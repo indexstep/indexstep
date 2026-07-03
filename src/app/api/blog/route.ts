@@ -29,6 +29,7 @@ export async function GET(req: NextRequest) {
       authorName: true,
       publishedAt: true,
       createdAt: true,
+      viewCount: true,
     },
   });
 

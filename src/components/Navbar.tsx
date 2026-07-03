@@ -48,14 +48,17 @@ export default function Navbar() {
           </Link>
 
           <div className="hidden md:flex items-center gap-3">
+            <Link href="/specs" className="flex items-center gap-1.5 hover:opacity-80 transition-colors" style={{ color: "var(--text-secondary)" }}>
+              <GitBranch className="w-4 h-4" /> Specs
+            </Link>
+            <Link href="/badges" className="hover:opacity-80 transition-colors" style={{ color: "var(--text-secondary)" }}>
+              Badges
+            </Link>
+            <Link href="/blog" className="hover:opacity-80 transition-colors" style={{ color: "var(--text-secondary)" }}>
+              Blog
+            </Link>
             {user && (
               <>
-                <Link href="/specs" className="flex items-center gap-1.5 hover:opacity-80 transition-colors" style={{ color: "var(--text-secondary)" }}>
-                  <GitBranch className="w-4 h-4" /> Specs
-                </Link>
-                <Link href="/badges" className="hover:opacity-80 transition-colors" style={{ color: "var(--text-secondary)" }}>
-                  Badges
-                </Link>
                 <Link href="/profile" className="hover:opacity-80 transition-colors" style={{ color: "var(--text-secondary)" }}>
                   My Profile
                 </Link>

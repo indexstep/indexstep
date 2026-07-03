@@ -5,20 +5,46 @@ import { getCurrentUser } from "@/lib/auth";
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
+    const user = await getCurrentUser();
+
     const spec = await prisma.spec.findUnique({
       where: { id },
       include: {
         author: { select: { id: true, name: true } },
         children: {
-          include: { _count: { select: { children: true } } },
+          where: { parentId: id },
+          select: {
+            id: true, name: true, details: true, color: true, icon: true, imageUrl: true,
+            viewCount: true, likeCount: true, followCount: true,
+            _count: { select: { children: true } },
+            children: true,
+          },
           orderBy: { createdAt: "asc" },
         },
         parent: { select: { id: true, name: true } },
       },
     });
+
     if (!spec) return NextResponse.json({ error: "Spec not found" }, { status: 404 });
-    return NextResponse.json({ spec });
+
+    let likedByMe = false;
+    let followedByMe = false;
+
+    if (user) {
+      const like = await prisma.specLike.findUnique({
+        where: { userId_specId: { userId: user.id, specId: id } },
+      });
+      likedByMe = !!like;
+
+      const follow = await prisma.specFollow.findUnique({
+        where: { userId_specId: { userId: user.id, specId: id } },
+      });
+      followedByMe = !!follow;
+    }
+
+    return NextResponse.json({ spec, likedByMe, followedByMe });
   } catch (error) {
+    console.error("Failed to fetch spec:", error);
     return NextResponse.json({ error: "Failed to fetch spec" }, { status: 500 });
   }
 }
@@ -60,7 +86,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         author: { select: { id: true, name: true } },
         children: {
           select: {
-            id: true, name: true, color: true, icon: true, imageUrl: true,
+            id: true, name: true, details: true, color: true, icon: true, imageUrl: true,
+            viewCount: true, likeCount: true, followCount: true,
             _count: { select: { children: true } },
             children: true,
           },
@@ -70,6 +97,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     });
     return NextResponse.json({ spec });
   } catch (error) {
+    console.error("Failed to update spec:", error);
     return NextResponse.json({ error: "Failed to update spec" }, { status: 500 });
   }
 }
@@ -87,6 +115,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     await prisma.spec.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (error) {
+    console.error("Failed to delete spec:", error);
     return NextResponse.json({ error: "Failed to delete spec" }, { status: 500 });
   }
 }

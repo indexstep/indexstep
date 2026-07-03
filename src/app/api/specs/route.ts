@@ -15,13 +15,16 @@ export async function GET(request: NextRequest) {
       where.parentId = parentId;
     }
 
+    const user = await getCurrentUser();
+
     const specs = await prisma.spec.findMany({
       where,
       include: {
         author: { select: { id: true, name: true } },
         children: {
           select: {
-            id: true, name: true, color: true, icon: true, imageUrl: true,
+            id: true, name: true, details: true, color: true, icon: true, imageUrl: true,
+            viewCount: true, likeCount: true, followCount: true,
             _count: { select: { children: true } },
             children: true,
           },

@@ -27,6 +27,8 @@ model User {
   comments         Comment[]
   logs             SystemLog[]
   specs            Spec[]
+  specLikes       SpecLike[]
+  specFollows     SpecFollow[]
   reportsFiled     Report[]  @relation("Reporter")
   reportsReceived  Report[]  @relation("ReportedUser")
   purchases        Purchase[]
@@ -227,17 +229,44 @@ enum ReportStatus {
 }
 
 model Spec {
+  id         String   @id @default(cuid())
+  name       String
+  details    String   @default("")
+  color      String   @default("#ff9940")
+  icon       String?
+  imageUrl   String?
+  parentId   String?
+  parent     Spec?    @relation("SpecChildren", fields: [parentId], references: [id])
+  children   Spec[]   @relation("SpecChildren")
+  authorId   String
+  author     User     @relation(fields: [authorId], references: [id])
+  viewCount  Int      @default(0)
+  likeCount  Int      @default(0)
+  followCount Int     @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  likes     SpecLike[]
+  follows   SpecFollow[]
+}
+
+model SpecLike {
   id        String   @id @default(cuid())
-  name      String
-  details   String   @default("")
-  color     String   @default("#ff9940")
-  icon      String?
-  imageUrl  String?
-  parentId  String?
-  parent    Spec?    @relation("SpecChildren", fields: [parentId], references: [id])
-  children  Spec[]   @relation("SpecChildren")
-  authorId  String
-  author    User     @relation(fields: [authorId], references: [id])
+  userId    String
+  specId    String
+  spec      Spec     @relation(fields: [specId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+
+  @@unique([userId, specId])
+}
+
+model SpecFollow {
+  id        String   @id @default(cuid())
+  userId    String
+  specId    String
+  spec      Spec     @relation(fields: [specId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, specId])
 }

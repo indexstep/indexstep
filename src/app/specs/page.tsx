@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import SpecTree from "@/components/SpecTree";
 import SpecForm from "@/components/SpecForm";
@@ -16,7 +16,10 @@ interface SpecItem extends SpecChild {
   children?: SpecItem[];
 }
 
-export default function SpecsPage() {
+function SpecsContent() {
+  const searchParams = useSearchParams();
+  const editId = searchParams.get("edit");
+
   const [specs, setSpecs] = useState<SpecItem[]>([]);
   const [allSpecsFlat, setAllSpecsFlat] = useState<{ id: string; name: string; depth?: number }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,8 +27,6 @@ export default function SpecsPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingSpec, setEditingSpec] = useState<SpecItem | null>(null);
   const [childParentId, setChildParentId] = useState<string | null>(null);
-  const searchParams = useSearchParams();
-  const editId = searchParams.get("edit");
 
   const fetchSpecs = useCallback(async () => {
     setLoading(true);
@@ -70,14 +71,12 @@ export default function SpecsPage() {
   // Handle ?edit= specId from URL (admin edit)
   useEffect(() => {
     if (!editId) return;
-    // Find the spec in already-loaded list, or fetch it directly
     const findSpec = async () => {
       const existing = specs.find(s => s.id === editId);
       if (existing) {
         setEditingSpec(existing);
         setShowForm(true);
       } else {
-        // Fetch it
         try {
           const res = await fetch(`/api/specs/${editId}`);
           if (res.ok) {
@@ -241,5 +240,13 @@ export default function SpecsPage() {
         </Modal>
       )}
     </div>
+  );
+}
+
+export default function SpecsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center" style={{ color: "var(--text-muted)" }}>Loading...</div>}>
+      <SpecsContent />
+    </Suspense>
   );
 }

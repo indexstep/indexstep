@@ -250,6 +250,7 @@ model Spec {
   likes     SpecLike[]
   follows   SpecFollow[]
   comments  Comment[]
+  attachments SpecAttachment[]
 }
 
 model SpecLike {
@@ -272,6 +273,20 @@ model SpecFollow {
   createdAt DateTime @default(now())
 
   @@unique([userId, specId])
+}
+
+model SpecAttachment {
+  id        String   @id @default(cuid())
+  name      String   @default("")
+  fileUrl   String
+  fileType  String   @default("image") // image | file
+  mimeType  String?
+  size      Int      @default(0)
+  specId    String
+  spec      Spec     @relation(fields: [specId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([specId])
 }
 
 model BlogPost {

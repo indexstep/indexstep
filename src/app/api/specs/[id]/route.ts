@@ -22,6 +22,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           orderBy: { createdAt: "asc" },
         },
         parent: { select: { id: true, name: true } },
+        attachments: { orderBy: { createdAt: "asc" } },
       },
     });
 
@@ -93,6 +94,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
           },
         },
         _count: { select: { children: true } },
+        attachments: { orderBy: { createdAt: "asc" } },
       },
     });
     return NextResponse.json({ spec });

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import SpecTree from "@/components/SpecTree";
 import SpecForm from "@/components/SpecForm";
 import Button from "@/components/Button";
@@ -23,6 +24,8 @@ export default function SpecsPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingSpec, setEditingSpec] = useState<SpecItem | null>(null);
   const [childParentId, setChildParentId] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const editId = searchParams.get("edit");
 
   const fetchSpecs = useCallback(async () => {
     setLoading(true);
@@ -63,6 +66,30 @@ export default function SpecsPage() {
     fetchSpecs();
     fetchAllSpecs();
   }, [fetchSpecs, fetchAllSpecs]);
+
+  // Handle ?edit= specId from URL (admin edit)
+  useEffect(() => {
+    if (!editId) return;
+    // Find the spec in already-loaded list, or fetch it directly
+    const findSpec = async () => {
+      const existing = specs.find(s => s.id === editId);
+      if (existing) {
+        setEditingSpec(existing);
+        setShowForm(true);
+      } else {
+        // Fetch it
+        try {
+          const res = await fetch(`/api/specs/${editId}`);
+          if (res.ok) {
+            const data = await res.json();
+            setEditingSpec(data.spec);
+            setShowForm(true);
+          }
+        } catch {}
+      }
+    };
+    if (specs.length > 0) findSpec();
+  }, [editId, specs]);
 
   const handleCreate = async (data: { name: string; details: string; color: string; icon: string | null; imageUrl: string | null; parentId: string | null }) => {
     const res = await fetch("/api/specs", {

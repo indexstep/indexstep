@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Heart, Eye, Users, ChevronRight, ArrowLeft, Edit2, GitBranch } from "lucide-react";
 import Button from "@/components/Button";
 import SpecTree from "@/components/SpecTree";
+import { useAuth } from "@/contexts/AuthContext";
 import type { SpecChild } from "@/lib/types";
 
 interface SpecData {
@@ -26,6 +27,7 @@ interface SpecData {
 export default function SpecDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { user } = useAuth();
   const id = params.id as string;
 
   const [spec, setSpec] = useState<SpecData | null>(null);
@@ -178,21 +180,30 @@ export default function SpecDetailPage() {
                 {spec.icon && !spec.imageUrl && <span className="text-2xl">{spec.icon}</span>}
               </div>
               <p className="text-sm mb-3" style={{ color: "var(--text-muted)" }}>
-                by <span className="font-medium" style={{ color: "var(--accent)" }}>{spec.author.name}</span>
+                by{" "}
+                <Link href={`/user/${spec.author.id}`} className="font-medium hover:underline" style={{ color: "var(--accent)" }}>
+                  {spec.author.name}
+                </Link>
               </p>
               
               {/* Stats row */}
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-1.5 text-sm" style={{ color: "var(--text-secondary)" }}>
-                  <Eye className="w-4 h-4" />
+              <div className="flex items-center gap-3 text-sm" style={{ color: "var(--text-muted)" }}>
+                <Link href={`/user/${spec.author.id}`} className="hover:underline" style={{ color: "var(--accent)" }}>
+                  {spec.author.name}
+                </Link>
+                <span>·</span>
+                <div className="flex items-center gap-1" style={{ color: "var(--text-secondary)" }}>
+                  <Eye className="w-3.5 h-3.5" />
                   <span>{spec.viewCount.toLocaleString()} views</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-sm" style={{ color: "var(--text-secondary)" }}>
-                  <Heart className="w-4 h-4" />
+                <span>·</span>
+                <div className="flex items-center gap-1" style={{ color: "var(--text-secondary)" }}>
+                  <Heart className="w-3.5 h-3.5" />
                   <span>{spec.likeCount.toLocaleString()} likes</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-sm" style={{ color: "var(--text-secondary)" }}>
-                  <Users className="w-4 h-4" />
+                <span>·</span>
+                <div className="flex items-center gap-1" style={{ color: "var(--text-secondary)" }}>
+                  <Users className="w-3.5 h-3.5" />
                   <span>{spec.followCount.toLocaleString()} follows</span>
                 </div>
               </div>
@@ -200,6 +211,16 @@ export default function SpecDetailPage() {
 
             {/* Action buttons */}
             <div className="flex gap-2">
+              {(user?.role === "ADMIN" || user?.role === "MODERATOR") && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => router.push(`/specs?edit=${id}`)}
+                >
+                  <Edit2 className="w-4 h-4 mr-1" />
+                  Edit
+                </Button>
+              )}
               <Button
                 variant={likedByMe ? "primary" : "secondary"}
                 size="sm"

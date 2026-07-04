@@ -249,7 +249,10 @@ export default function TutorialView({ initialTutorial }: TutorialViewProps) {
           <h1 className="text-3xl md:text-4xl font-bold text-[var(--text)] mb-4 leading-tight">{tutorial.title}</h1>
           <p className="text-lg text-[var(--text-secondary)] mb-6 leading-relaxed max-w-3xl">{tutorial.description}</p>
           <div className="flex flex-wrap items-center gap-6 text-[var(--text-secondary)]">
-            <div className="flex items-center gap-2"><User className="w-5 h-5" /><span>{tutorial.author.name}</span></div>
+            <Link href={`/user/${tutorial.author.id}`} className="flex items-center gap-2 hover:underline" style={{ color: "var(--accent)" }}>
+              <User className="w-5 h-5" />
+              <span>{tutorial.author.name}</span>
+            </Link>
             <div className="flex items-center gap-2"><Clock className="w-5 h-5" /><span>{formatTime(tutorial.timeMinutes)}</span></div>
             <div className="flex items-center gap-2"><Circle className="w-5 h-5" /><span>{tutorial.steps.length} steps</span></div>
             {tutorial.viewCount !== undefined && (

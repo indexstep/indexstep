@@ -209,9 +209,13 @@ export default function HomePage() {
                     </div>
                     <h3 className="text-lg font-semibold text-[var(--text)] hover:text-[var(--accent)] transition-colors truncate">{tutorial.title}</h3>
                     <p className="text-sm text-[var(--text-secondary)] line-clamp-2 mt-1">{tutorial.description}</p>
-                    <div className="flex items-center gap-4 mt-2 text-xs text-[var(--text-muted)]">
-                      <span>By {tutorial.author.name}</span>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs" style={{ color: "var(--text-muted)" }}>
+                      <Link href={`/user/${tutorial.author.id}`} className="hover:underline" style={{ color: "var(--accent)" }}>
+                        {tutorial.author.name}
+                      </Link>
+                      <span>·</span>
                       <span>{tutorial._count.steps} steps</span>
+                      <span>·</span>
                       <span>{tutorial.timeMinutes < 60 ? `${tutorial.timeMinutes}m` : `${Math.floor(tutorial.timeMinutes / 60)}h`}</span>
                     </div>
                   </div>

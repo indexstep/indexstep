@@ -5,17 +5,13 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Clock, User, CheckCircle, Circle, Wrench, X, ArrowLeft, Flag, AlertTriangle, Eye, Share2, MessageCircle, Send, Trash2, Copy, Check, CornerDownRight, Pencil, Settings2, ChefHat, Cpu, Hammer, Flower2, Scissors, Monitor, Lock, KeyRound, ThumbsUp } from "lucide-react";
 import Button from "@/components/Button";
+import CommentsSection from "@/components/CommentsSection";
 import { useAuth } from "@/contexts/AuthContext";
 import { getMergedToolConfig, TOOL_CATEGORY_CONFIG, type CustomToolFieldConfig } from "@/lib/toolCategories";
 import { CATEGORIES } from "@/lib/types";
 
 interface Tool { id: string; name: string; quantity: string | null; size: string | null; kind: string | null; notes: string | null; category: string; }
 interface Step { id: string; order: number; title: string; content: string; imageUrl: string | null; }
-interface CommentData {
-  id: string; content: string; createdAt: string; likeCount: number; likedBy: string;
-  author: { id: string; name: string; profilePicture: string | null };
-  replies?: CommentData[];
-}
 interface TutorialDetailData {
   id: string; title: string; description: string; category: string;
   difficulty: number; timeMinutes: number; coverImage: string | null; viewCount?: number;
@@ -50,15 +46,9 @@ export default function TutorialView({ initialTutorial }: TutorialViewProps) {
   const [reportSubmitted, setReportSubmitted] = useState(false);
   const [submittingReport, setSubmittingReport] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [comments, setComments] = useState<CommentData[]>([]);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [likedByMe, setLikedByMe] = useState(initialTutorial?.likedByMe ?? false);
   const [localLikeCount, setLocalLikeCount] = useState(initialTutorial?.likeCount ?? 0);
-  const [newComment, setNewComment] = useState("");
-  const [submittingComment, setSubmittingComment] = useState(false);
-  const [replyingTo, setReplyingTo] = useState<string | null>(null);
-  const [replyContent, setReplyContent] = useState("");
-  const [submittingReply, setSubmittingReply] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
@@ -66,10 +56,7 @@ export default function TutorialView({ initialTutorial }: TutorialViewProps) {
   const [verifyingPassword, setVerifyingPassword] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [readProgress, setReadProgress] = useState(0);
-  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
-  const [editContent, setEditContent] = useState("");
   const [toolTab, setToolTab] = useState<string>(tutorial?.category || "DIY");
-  const [submittingEdit, setSubmittingEdit] = useState(false);
 
   const handlePasswordVerify = async () => {
     if (!passwordInput.trim() || !tutorial) return;
@@ -149,15 +136,6 @@ export default function TutorialView({ initialTutorial }: TutorialViewProps) {
       setLoading(false);
     }
   }, [params.id, initialTutorial, router]);
-
-  useEffect(() => {
-    if (commentsOpen && tutorial) {
-      fetch(`/api/tutorials/${tutorial.id}/comments`)
-        .then((res) => res.ok ? res.json() : null)
-        .then((data) => { if (data) setComments(data); })
-        .catch(() => {});
-    }
-  }, [commentsOpen, tutorial]);
 
   // Reading progress bar
   useEffect(() => {
@@ -504,390 +482,7 @@ export default function TutorialView({ initialTutorial }: TutorialViewProps) {
 
             {/* Comments Section */}
             {commentsOpen && (
-              <div className="mt-12 pt-8 border-t border-[var(--border)]">
-                <h2 className="text-xl font-semibold text-[var(--text)] mb-6 flex items-center gap-2">
-                  <MessageCircle className="w-5 h-5 text-[var(--accent)]" />
-                  Comments ({comments.length})
-                </h2>
-
-                {user ? (
-                  <form
-                    onSubmit={async (e) => {
-                      e.preventDefault();
-                      if (!newComment.trim()) return;
-                      setSubmittingComment(true);
-                      try {
-                        const res = await fetch(`/api/tutorials/${tutorial.id}/comments`, {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ content: newComment }),
-                        });
-                        if (res.ok) {
-                          const comment = await res.json();
-                          setComments([...comments, comment]);
-                          setNewComment("");
-                        }
-                      } catch (err) {
-                        console.error("Failed to post comment:", err);
-                      } finally {
-                        setSubmittingComment(false);
-                      }
-                    }}
-                    className="mb-8"
-                  >
-                    <div className="flex gap-3">
-                      <div className="w-10 h-10 rounded-full bg-[var(--accent)] flex items-center justify-center flex-shrink-0">
-                        <User className="w-5 h-5 text-[#0f0f14]" />
-                      </div>
-                      <div className="flex-1">
-                        <textarea
-                          value={newComment}
-                          onChange={(e) => setNewComment(e.target.value)}
-                          placeholder="Share your thoughts, tips, or questions..."
-                          rows={3}
-                          maxLength={2000}
-                          className="w-full px-4 py-3 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-[var(--accent)] resize-none"
-                        />
-                        <div className="flex items-center justify-between mt-2">
-                          <span className="text-xs text-[var(--text-muted)]">{newComment.length}/2000</span>
-                          <Button type="submit" size="sm" loading={submittingComment} disabled={!newComment.trim()}>
-                            <Send className="w-4 h-4 mr-1" />Post Comment
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </form>
-                ) : (
-                  <div className="mb-8 p-4 bg-[var(--bg-secondary)] rounded-lg border border-[var(--border)] text-center">
-                    <p className="text-[var(--text-secondary)] mb-3">Sign in to join the conversation</p>
-                    <div className="flex gap-3 justify-center">
-                      <Link href="/login"><Button variant="secondary" size="sm">Log In</Button></Link>
-                      <Link href="/signup"><Button size="sm">Sign Up</Button></Link>
-                    </div>
-                  </div>
-                )}
-
-                {comments.length === 0 ? (
-                  <div className="text-center py-8">
-                    <MessageCircle className="w-10 h-10 text-[#3a3a4d] mx-auto mb-3" />
-                    <p className="text-[var(--text-muted)]">No comments yet. Be the first to share your thoughts!</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {comments.map((comment) => {
-                      const likedByMe = user ? comment.likedBy.split(",").filter(Boolean).includes(user.id) : false;
-                      return (
-                        <div key={comment.id}>
-                          <div className="bg-[var(--bg-secondary)] rounded-lg border border-[var(--border)] p-4">
-                            <div className="flex items-start gap-3">
-                              <div className="w-10 h-10 rounded-full bg-[var(--accent)] flex items-center justify-center flex-shrink-0">
-                                {comment.author.profilePicture ? (
-                                  <img src={comment.author.profilePicture} alt={comment.author.name} className="w-full h-full rounded-full object-cover" />
-                                ) : (
-                                  <User className="w-5 h-5 text-[#0f0f14]" />
-                                )}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                  <span className="font-medium text-[var(--text)]">{comment.author.name}</span>
-                                  <span className="text-xs text-[var(--text-muted)]">
-                                    {new Date(comment.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                                  </span>
-                                  <button
-                                    onClick={async () => {
-                                      if (!user) return;
-                                      try {
-                                        const res = await fetch(`/api/comments/${comment.id}/like`, { method: "POST" });
-                                        if (res.ok) {
-                                          const data = await res.json();
-                                          setComments(comments.map((c) =>
-                                            c.id === comment.id ? { ...c, likeCount: data.likeCount, likedBy: data.likedBy } : c
-                                          ));
-                                        }
-                                      } catch (err) {
-                                        console.error("Failed to like comment:", err);
-                                      }
-                                    }}
-                                    className={`flex items-center gap-1 px-2 py-1 rounded-md text-sm transition-colors ${likedByMe ? "text-[var(--accent)] bg-[var(--accent)]/10" : "text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-highlight)]"}`}
-                                  >
-                                    <span>♥</span>
-                                    <span>{comment.likeCount}</span>
-                                  </button>
-                                  {user && (
-                                    <button
-                                      onClick={() => { setReplyingTo(replyingTo === comment.id ? null : comment.id); setReplyContent(""); }}
-                                      className={`flex items-center gap-1 px-2 py-1 rounded-md text-sm transition-colors ${replyingTo === comment.id ? "text-[var(--accent)] bg-[var(--accent)]/10" : "text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-highlight)]"}`}
-                                    >
-                                      <CornerDownRight className="w-3 h-3" />Reply
-                                    </button>
-                                  )}
-                                  {(user?.id === comment.author.id || user?.role === "ADMIN" || user?.role === "MODERATOR") && (
-                                    <button
-                                      onClick={() => { setEditingCommentId(comment.id); setEditContent(comment.content); }}
-                                      className="text-[var(--text-muted)] hover:text-[var(--cyan)] transition-colors"
-                                      title="Edit"
-                                    >
-                                      <Pencil className="w-4 h-4" />
-                                    </button>
-                                  )}
-                                  {(user?.id === comment.author.id || user?.role === "ADMIN" || user?.role === "MODERATOR") && (
-                                    <button
-                                      onClick={async () => {
-                                        if (!confirm("Delete this comment?")) return;
-                                        try {
-                                          const res = await fetch(`/api/comments/${comment.id}`, { method: "DELETE" });
-                                          if (res.ok) setComments(comments.filter((c) => c.id !== comment.id));
-                                        } catch (err) {
-                                          console.error("Failed to delete comment:", err);
-                                        }
-                                      }}
-                                      className="text-[var(--text-muted)] hover:text-[var(--red)] transition-colors"
-                                    >
-                                      <Trash2 className="w-4 h-4" />
-                                    </button>
-                                  )}
-                                </div>
-                                {editingCommentId === comment.id ? (
-                                  <form
-                                    onSubmit={async (e) => {
-                                      e.preventDefault();
-                                      if (!editContent.trim()) return;
-                                      setSubmittingEdit(true);
-                                      try {
-                                        const res = await fetch(`/api/comments/${comment.id}`, {
-                                          method: "PATCH",
-                                          headers: { "Content-Type": "application/json" },
-                                          body: JSON.stringify({ content: editContent }),
-                                        });
-                                        if (res.ok) {
-                                          const updated = await res.json();
-                                          setComments(comments.map((c) =>
-                                            c.id === comment.id ? { ...c, content: updated.content } : c
-                                          ));
-                                          setEditingCommentId(null);
-                                          setEditContent("");
-                                        }
-                                      } catch (err) {
-                                        console.error("Failed to edit comment:", err);
-                                      } finally {
-                                        setSubmittingEdit(false);
-                                      }
-                                    }}
-                                    className="mt-2"
-                                  >
-                                    <textarea
-                                      value={editContent}
-                                      onChange={(e) => setEditContent(e.target.value)}
-                                      rows={3}
-                                      maxLength={2000}
-                                      className="w-full px-3 py-2 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-[var(--accent)] resize-none text-sm"
-                                      autoFocus
-                                    />
-                                    <div className="flex items-center justify-between mt-2">
-                                      <span className="text-xs text-[var(--text-muted)]">{editContent.length}/2000</span>
-                                      <div className="flex gap-2">
-                                        <Button type="button" variant="ghost" size="sm" onClick={() => { setEditingCommentId(null); setEditContent(""); }}>Cancel</Button>
-                                        <Button type="submit" size="sm" loading={submittingEdit} disabled={!editContent.trim()}>Save</Button>
-                                      </div>
-                                    </div>
-                                  </form>
-                                ) : (
-                                  <p className="text-[var(--text-secondary)] whitespace-pre-wrap">{comment.content}</p>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Reply form */}
-                            {replyingTo === comment.id && (
-                              <div className="mt-3 ml-13">
-                                <form
-                                  onSubmit={async (e) => {
-                                    e.preventDefault();
-                                    if (!replyContent.trim()) return;
-                                    setSubmittingReply(true);
-                                    try {
-                                      const res = await fetch(`/api/tutorials/${tutorial.id}/comments`, {
-                                        method: "POST",
-                                        headers: { "Content-Type": "application/json" },
-                                        body: JSON.stringify({ content: replyContent, parentId: comment.id }),
-                                      });
-                                      if (res.ok) {
-                                        const newReply = await res.json();
-                                        setComments(comments.map((c) =>
-                                          c.id === comment.id ? { ...c, replies: [...(c.replies || []), newReply] } : c
-                                        ));
-                                        setReplyingTo(null);
-                                        setReplyContent("");
-                                      }
-                                    } catch (err) {
-                                      console.error("Failed to post reply:", err);
-                                    } finally {
-                                      setSubmittingReply(false);
-                                    }
-                                  }}
-                                >
-                                  <textarea
-                                    value={replyContent}
-                                    onChange={(e) => setReplyContent(e.target.value)}
-                                    placeholder={`Reply to ${comment.author.name}...`}
-                                    rows={2}
-                                    maxLength={2000}
-                                    className="w-full px-3 py-2 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-[var(--accent)] resize-none text-sm"
-                                    autoFocus
-                                  />
-                                  <div className="flex items-center justify-between mt-2">
-                                    <span className="text-xs text-[var(--text-muted)]">{replyContent.length}/2000</span>
-                                    <div className="flex gap-2">
-                                      <Button type="button" variant="ghost" size="sm" onClick={() => { setReplyingTo(null); setReplyContent(""); }}>Cancel</Button>
-                                      <Button type="submit" size="sm" loading={submittingReply} disabled={!replyContent.trim()}>Reply</Button>
-                                    </div>
-                                  </div>
-                                </form>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Replies */}
-                          {comment.replies && comment.replies.length > 0 && (
-                            <div className="mt-2 ml-8 pl-4 border-l-2 border-[var(--border)] space-y-3">
-                              {comment.replies.map((reply) => {
-                                const replyLikedByMe = user ? reply.likedBy.split(",").filter(Boolean).includes(user.id) : false;
-                                return (
-                                  <div key={reply.id} className="bg-[var(--bg-secondary)] rounded-lg border border-[var(--border)] p-3">
-                                    <div className="flex items-start gap-2">
-                                      <div className="w-8 h-8 rounded-full bg-[var(--bg-highlight)] flex items-center justify-center flex-shrink-0">
-                                        {reply.author.profilePicture ? (
-                                          <img src={reply.author.profilePicture} alt={reply.author.name} className="w-full h-full rounded-full object-cover" />
-                                        ) : (
-                                          <User className="w-4 h-4 text-[var(--text-secondary)]" />
-                                        )}
-                                      </div>
-                                      <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                          <span className="font-medium text-[var(--text)] text-sm">{reply.author.name}</span>
-                                          <span className="text-xs text-[var(--text-muted)]">
-                                            {new Date(reply.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                                          </span>
-                                          <button
-                                            onClick={async () => {
-                                              if (!user) return;
-                                              try {
-                                                const res = await fetch(`/api/comments/${reply.id}/like`, { method: "POST" });
-                                                if (res.ok) {
-                                                  const data = await res.json();
-                                                  setComments(comments.map((c) =>
-                                                    c.id === comment.id ? {
-                                                      ...c,
-                                                      replies: c.replies?.map((r) =>
-                                                        r.id === reply.id ? { ...r, likeCount: data.likeCount, likedBy: data.likedBy } : r
-                                                      )
-                                                    } : c
-                                                  ));
-                                                }
-                                              } catch (err) {
-                                                console.error("Failed to like reply:", err);
-                                              }
-                                            }}
-                                            className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-xs transition-colors ${replyLikedByMe ? "text-[var(--accent)] bg-[var(--accent)]/10" : "text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-highlight)]"}`}
-                                          >
-                                            <span>♥</span>
-                                            <span>{reply.likeCount}</span>
-                                          </button>
-                                          {(user?.id === reply.author.id || user?.role === "ADMIN" || user?.role === "MODERATOR") && (
-                                            <button
-                                              onClick={() => { setEditingCommentId(reply.id); setEditContent(reply.content); }}
-                                              className="text-[var(--text-muted)] hover:text-[var(--cyan)] transition-colors"
-                                              title="Edit"
-                                            >
-                                              <Pencil className="w-3 h-3" />
-                                            </button>
-                                          )}
-                                          {(user?.id === reply.author.id || user?.role === "ADMIN" || user?.role === "MODERATOR") && (
-                                            <button
-                                              onClick={async () => {
-                                                if (!confirm("Delete this reply?")) return;
-                                                try {
-                                                  const res = await fetch(`/api/comments/${reply.id}`, { method: "DELETE" });
-                                                  if (res.ok) {
-                                                    setComments(comments.map((c) =>
-                                                      c.id === comment.id ? { ...c, replies: c.replies?.filter((r) => r.id !== reply.id) } : c
-                                                    ));
-                                                  }
-                                                } catch (err) {
-                                                  console.error("Failed to delete reply:", err);
-                                                }
-                                              }}
-                                              className="text-[var(--text-muted)] hover:text-[var(--red)] transition-colors ml-auto"
-                                            >
-                                              <Trash2 className="w-3 h-3" />
-                                            </button>
-                                          )}
-                                        </div>
-                                        {editingCommentId === reply.id ? (
-                                          <form
-                                            onSubmit={async (e) => {
-                                              e.preventDefault();
-                                              if (!editContent.trim()) return;
-                                              setSubmittingEdit(true);
-                                              try {
-                                                const res = await fetch(`/api/comments/${reply.id}`, {
-                                                  method: "PATCH",
-                                                  headers: { "Content-Type": "application/json" },
-                                                  body: JSON.stringify({ content: editContent }),
-                                                });
-                                                if (res.ok) {
-                                                  const updated = await res.json();
-                                                  setComments(comments.map((c) =>
-                                                    c.id === comment.id ? {
-                                                      ...c,
-                                                      replies: c.replies?.map((r) =>
-                                                        r.id === reply.id ? { ...r, content: updated.content } : r
-                                                      )
-                                                    } : c
-                                                  ));
-                                                  setEditingCommentId(null);
-                                                  setEditContent("");
-                                                }
-                                              } catch (err) {
-                                                console.error("Failed to edit reply:", err);
-                                              } finally {
-                                                setSubmittingEdit(false);
-                                              }
-                                            }}
-                                            className="mt-2"
-                                          >
-                                            <textarea
-                                              value={editContent}
-                                              onChange={(e) => setEditContent(e.target.value)}
-                                              rows={2}
-                                              maxLength={2000}
-                                              className="w-full px-3 py-2 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-[var(--accent)] resize-none text-sm"
-                                              autoFocus
-                                            />
-                                            <div className="flex items-center justify-between mt-2">
-                                              <span className="text-xs text-[var(--text-muted)]">{editContent.length}/2000</span>
-                                              <div className="flex gap-2">
-                                                <Button type="button" variant="ghost" size="sm" onClick={() => { setEditingCommentId(null); setEditContent(""); }}>Cancel</Button>
-                                                <Button type="submit" size="sm" loading={submittingEdit} disabled={!editContent.trim()}>Save</Button>
-                                              </div>
-                                            </div>
-                                          </form>
-                                        ) : (
-                                          <p className="text-[var(--text-secondary)] text-sm whitespace-pre-wrap">{reply.content}</p>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
+              <CommentsSection targetType="tutorial" targetId={tutorial.id} />
             )}
           </div>
         </div>

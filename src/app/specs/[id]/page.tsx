@@ -3,9 +3,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Heart, Eye, Users, ChevronRight, ArrowLeft, Edit2, GitBranch } from "lucide-react";
+import { Heart, Eye, Users, ChevronRight, ArrowLeft, Edit2, GitBranch, MessageCircle } from "lucide-react";
 import Button from "@/components/Button";
 import SpecTree from "@/components/SpecTree";
+import CommentsSection from "@/components/CommentsSection";
 import { useAuth } from "@/contexts/AuthContext";
 import type { SpecChild } from "@/lib/types";
 
@@ -37,6 +38,7 @@ export default function SpecDetailPage() {
   const [error, setError] = useState("");
   const [likeLoading, setLikeLoading] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(false);
 
   const fetchSpec = useCallback(async () => {
     setLoading(true);
@@ -239,6 +241,14 @@ export default function SpecDetailPage() {
                 <Users className="w-4 h-4 mr-1" />
                 {followedByMe ? "Following" : "Follow"}
               </Button>
+              <Button
+                variant={commentsOpen ? "primary" : "secondary"}
+                size="sm"
+                onClick={() => setCommentsOpen(!commentsOpen)}
+              >
+                <MessageCircle className="w-4 h-4 mr-1" />
+                Comments
+              </Button>
             </div>
           </div>
 
@@ -313,6 +323,13 @@ export default function SpecDetailPage() {
           <div className="text-center py-12 rounded-xl border" style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border)" }}>
             <GitBranch className="w-10 h-10 mx-auto mb-3" style={{ color: "var(--text-muted)" }} />
             <p className="text-sm" style={{ color: "var(--text-muted)" }}>No sub-specs yet</p>
+          </div>
+        )}
+
+        {/* Comments Section */}
+        {commentsOpen && (
+          <div className="rounded-xl border p-6 mt-6" style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border)" }}>
+            <CommentsSection targetType="spec" targetId={id} />
           </div>
         )}
       </div>

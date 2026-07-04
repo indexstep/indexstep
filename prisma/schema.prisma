@@ -181,8 +181,10 @@ model Comment {
   likedBy    String    @default("") // comma-separated user IDs for SQLite simplicity
   authorId   String
   author     User     @relation(fields: [authorId], references: [id])
-  tutorialId String
-  tutorial   Tutorial @relation(fields: [tutorialId], references: [id], onDelete: Cascade)
+  tutorialId String?
+  tutorial   Tutorial? @relation(fields: [tutorialId], references: [id], onDelete: Cascade)
+  specId     String?
+  spec       Spec?    @relation(fields: [specId], references: [id], onDelete: Cascade)
   parentId   String?
   parent     Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
   replies    Comment[] @relation("CommentReplies")
@@ -247,6 +249,7 @@ model Spec {
   updatedAt  DateTime @updatedAt
   likes     SpecLike[]
   follows   SpecFollow[]
+  comments  Comment[]
 }
 
 model SpecLike {

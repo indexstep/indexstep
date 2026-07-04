@@ -245,7 +245,47 @@ export default function SpecDetailPage() {
           {/* Description */}
           {spec.details && (
             <div className="mt-4 pt-4 border-t" style={{ borderColor: "var(--border)" }}>
-              <p className="text-sm whitespace-pre-wrap" style={{ color: "var(--text-secondary)" }}>{spec.details}</p>
+              <div className="grid gap-2">
+                {spec.details.split("\n").map((line, i) => {
+                  const colonIdx = line.indexOf(":");
+                  if (colonIdx > 0) {
+                    const label = line.slice(0, colonIdx + 1).trim();
+                    const value = line.slice(colonIdx + 1).trim();
+                    return (
+                      <div
+                        key={i}
+                        className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-3 p-3 rounded-lg"
+                        style={{ backgroundColor: "var(--bg)", border: "1px solid var(--border)" }}
+                      >
+                        <span
+                          className="text-xs font-semibold uppercase tracking-wide shrink-0 pt-0.5"
+                          style={{ color: "var(--accent)", minWidth: "120px" }}
+                        >
+                          {label}
+                        </span>
+                        <span className="text-sm" style={{ color: "var(--text)" }}>
+                          {value}
+                        </span>
+                      </div>
+                    );
+                  }
+                  // Continuation line (no colon) — treat as indented text
+                  if (line.trim()) {
+                    return (
+                      <div
+                        key={i}
+                        className="flex items-start gap-3 p-3 pl-6 rounded-lg"
+                        style={{ backgroundColor: "var(--bg)", border: "1px solid var(--border)", borderLeft: "3px solid var(--accent)" }}
+                      >
+                        <span className="text-sm" style={{ color: "var(--text-secondary)" }}>
+                          {line}
+                        </span>
+                      </div>
+                    );
+                  }
+                  return null;
+                })}
+              </div>
             </div>
           )}
         </div>

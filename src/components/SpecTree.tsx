@@ -4,6 +4,9 @@ import { useState } from "react";
 import { Plus, Edit2, Trash2 } from "lucide-react";
 import type { SpecChild } from "@/lib/types";
 
+const RED = "#C8102E";
+const BLUE = "#2C5FE6";
+
 interface SpecNodeData extends SpecChild {
   details?: string;
   parentId?: string | null;
@@ -18,45 +21,29 @@ interface SpecNodeProps {
   spec: SpecNodeData;
   depth?: number;
   isLast?: boolean;
-  isRed?: boolean;
-  ancestorHasExpander?: boolean;
+  // which ancestor depths had non-last children — true means that ancestor
+  // had more siblings after the branch we're on, so we need a | at this depth
+  nonLastAtDepth: boolean[];
   onEdit?: (spec: SpecNodeData) => void;
   onDelete?: (id: string) => void;
   onAddChild?: (parentId: string) => void;
 }
 
-const RED = "#C8102E";
-const BLUE = "#2C5FE6";
-
-function getTreeParts(depth: number, isLast: boolean, ancestorHasExpander: boolean): {
-  indent: string;
-  connector: string;
-  finalPrefix: string;
-} {
-  if (depth === 0) {
-    return {
-      indent: "",
-      connector: "",
-      finalPrefix: "",
-    };
+/** Build the leading tree prefix for a node at `depth` with `nonLastAtDepth`. */
+function treePrefix(depth: number, nonLastAtDepth: boolean[]): string {
+  if (depth === 0) return "";
+  let prefix = "";
+  for (let d = 0; d < depth; d++) {
+    prefix += nonLastAtDepth[d] ? "│ " : "  ";
   }
-
-  const indent = "  ".repeat(depth - 1);
-  const pipe = ancestorHasExpander ? "│ " : "  ";
-  const connector = isLast ? "└─ " : "├─ ";
-  return {
-    indent: indent + pipe,
-    connector,
-    finalPrefix: indent + (isLast ? "└─ " : "├─ "),
-  };
+  return prefix;
 }
 
 function SpecNode({
   spec,
   depth = 0,
   isLast = false,
-  isRed = true,
-  ancestorHasExpander = false,
+  nonLastAtDepth,
   onEdit,
   onDelete,
   onAddChild,
@@ -64,35 +51,53 @@ function SpecNode({
   const hasChildren = !!(spec.children && spec.children.length > 0);
   const childCount = spec._count?.children ?? spec.children?.length ?? 0;
 
-  const { indent, connector, finalPrefix } = getTreeParts(depth, isLast, ancestorHasExpander);
+  // Each node manages its own expanded state
+  const [expanded, setExpanded] = useState(depth < 2);
 
   const isRedNode = hasChildren;
   const labelColor = isRedNode ? RED : BLUE;
-
   const displayName = spec.name.toUpperCase();
   const prefix = depth > 0 && !hasChildren ? "+ " : "";
 
+  // Build tree connector: ├─ or └─ at this node's depth
+  const depthConnector = depth > 0
+    ? (isLast ? "└─ " : "├─ ")
+    : "";
+
+  const fullPrefix = treePrefix(depth, nonLastAtDepth) + depthConnector;
+
+  // For children: pass nonLastAtDepth updated with whether THIS node is last
+  const childNonLast: boolean[] = [
+    ...nonLastAtDepth,
+    !isLast,
+  ];
+
   return (
-    <div className="select-none font-mono text-sm leading-7">
+    <div className="select-none font-mono text-sm leading-6">
+      {/* This node's row */}
       <div
-        className="flex items-center gap-2 cursor-pointer group py-0.5 hover:bg-gray-100 rounded transition-colors px-1"
-        onClick={() => hasChildren && void 0}
+        className="flex items-center gap-1 cursor-pointer group py-0.5 px-1 rounded hover:bg-gray-100 transition-colors whitespace-nowrap"
+        onClick={() => hasChildren && setExpanded(!expanded)}
       >
-        {/* Tree connector */}
-        <span className="text-gray-400 select-none w-auto" style={{ minWidth: "0", fontFamily: "monospace" }}>
-          {depth > 0 ? finalPrefix : ""}
+        {/* Tree prefix (│ or spaces + ├ or └) */}
+        <span className="text-gray-400 select-none" style={{ fontFamily: "monospace" }}>
+          {fullPrefix}
         </span>
 
         {/* Expand/collapse arrow */}
-        <span className="select-none w-4 flex-shrink-0" style={{ color: labelColor }}>
-          {hasChildren ? "▶" : ""}
+        <span className="select-none w-4 flex-shrink-0" style={{ color: labelColor, fontFamily: "monospace" }}>
+          {hasChildren ? (expanded ? "▼" : "▶") : ""}
         </span>
 
         {/* Prefix for leaf items */}
-        <span className="flex-shrink-0" style={{ color: labelColor }}>{prefix}</span>
+        <span className="flex-shrink-0" style={{ color: labelColor, fontFamily: "monospace" }}>
+          {prefix}
+        </span>
 
         {/* Name */}
-        <span className="truncate" style={{ color: labelColor }}>{displayName}</span>
+        <span className="truncate" style={{ color: labelColor, fontFamily: "monospace" }}>
+          {displayName}
+        </span>
 
         {/* Image thumbnail */}
         {spec.imageUrl && (
@@ -103,18 +108,18 @@ function SpecNode({
           />
         )}
 
-        {/* Child count badge */}
+        {/* Child count */}
         {childCount > 0 && (
           <span
             className="text-xs px-1 rounded flex-shrink-0"
-            style={{ backgroundColor: labelColor + "22", color: labelColor }}
+            style={{ backgroundColor: labelColor + "22", color: labelColor, fontFamily: "monospace" }}
           >
             {childCount}
           </span>
         )}
 
         {/* Action buttons */}
-        <div className="hidden group-hover:flex items-center gap-0.5 ml-auto flex-shrink-0">
+        <div className="hidden group-hover:flex items-center gap-0.5 ml-2 flex-shrink-0">
           {onAddChild && (
             <button
               onClick={(e) => { e.stopPropagation(); onAddChild(spec.id); }}
@@ -145,8 +150,8 @@ function SpecNode({
         </div>
       </div>
 
-      {/* Children */}
-      {hasChildren && (
+      {/* Children — only rendered when expanded */}
+      {hasChildren && expanded && (
         <div>
           {spec.children!.map((child, idx) => (
             <SpecNode
@@ -154,8 +159,7 @@ function SpecNode({
               spec={child as SpecNodeData}
               depth={depth + 1}
               isLast={idx === spec.children!.length - 1}
-              isRed={false}
-              ancestorHasExpander={hasChildren}
+              nonLastAtDepth={childNonLast}
               onEdit={onEdit}
               onDelete={onDelete}
               onAddChild={onAddChild}
@@ -179,7 +183,7 @@ export default function SpecTree({ specs, allSpecs, onEdit, onDelete, onAddChild
   if (specs.length === 0) {
     return (
       <div className="text-center py-16 font-mono">
-        <p className="text-gray-400 text-sm uppercase tracking-widest">No specs yet.</p>
+        <p className="text-gray-400 text-sm uppercase tracking-widest">NO SPECS YET</p>
       </div>
     );
   }
@@ -192,8 +196,7 @@ export default function SpecTree({ specs, allSpecs, onEdit, onDelete, onAddChild
           spec={spec}
           depth={0}
           isLast={idx === specs.length - 1}
-          isRed={true}
-          ancestorHasExpander={false}
+          nonLastAtDepth={[]}
           onEdit={onEdit}
           onDelete={onDelete}
           onAddChild={onAddChild}

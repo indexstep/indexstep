@@ -9,6 +9,9 @@ import Modal from "@/components/Modal";
 import type { SpecChild } from "@/lib/types";
 import { Plus, GitBranch, Layers } from "lucide-react";
 
+const RED = "#C8102E";
+const BLUE = "#2C5FE6";
+
 interface SpecItem extends SpecChild {
   details?: string;
   parentId?: string | null;
@@ -158,21 +161,21 @@ function SpecsContent() {
   };
 
   return (
-    <div className="min-h-screen">
-      <div className="border-b" style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border)" }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen" style={{ backgroundColor: "#ffffff", fontFamily: "monospace" }}>
+      <div className="border-b border-gray-200" style={{ backgroundColor: "#ffffff" }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: "var(--accent)" }}>
-                <GitBranch className="w-5 h-5" style={{ color: "#0f0f14" }} />
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: RED }}>
+                <GitBranch className="w-5 h-5" style={{ color: "#ffffff" }} />
               </div>
               <div>
-                <h1 className="text-2xl font-bold" style={{ color: "var(--text)" }}>Specifications</h1>
-                <p className="text-sm" style={{ color: "var(--text-muted)" }}>Tree-based specs and documentation</p>
+                <h1 className="text-2xl font-bold tracking-widest" style={{ color: RED }}>SPECIFICATIONS</h1>
+                <p className="text-xs tracking-widest" style={{ color: BLUE }}>TREE-BASED SPECS AND DOCUMENTATION</p>
               </div>
             </div>
-            <Button onClick={openNewSpec} className="gap-2">
-              <Plus className="w-4 h-4" /> Create Spec
+            <Button onClick={openNewSpec} className="gap-2 font-mono text-xs tracking-widest uppercase" style={{ backgroundColor: RED, color: "#ffffff", border: "none" }}>
+              <Plus className="w-4 h-4" /> NEW SPEC
             </Button>
           </div>
         </div>
@@ -181,7 +184,7 @@ function SpecsContent() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
-            <div className="rounded-xl border p-5" style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border)" }}>
+            <div className="border p-5" style={{ backgroundColor: "#ffffff", borderColor: "#e5e5e5" }}>
               {loading ? (
                 <div className="flex items-center justify-center py-16 gap-2" style={{ color: "var(--text-muted)" }}>
                   <div className="w-2 h-2 rounded-full bg-[var(--accent)] animate-bounce" />
@@ -189,8 +192,8 @@ function SpecsContent() {
                   <div className="w-2 h-2 rounded-full bg-[var(--accent)] animate-bounce" style={{ animationDelay: "300ms" }} />
                 </div>
               ) : fetchError ? (
-                <div className="text-center py-16">
-                  <p style={{ color: "var(--error)" }}>{fetchError}</p>
+                <div className="text-center py-16 font-mono">
+                  <p style={{ color: RED }}>{fetchError}</p>
                   <Button onClick={fetchSpecs} className="mt-4">Retry</Button>
                 </div>
               ) : (
@@ -205,18 +208,17 @@ function SpecsContent() {
           </div>
 
           <div className="space-y-4">
-            <div className="rounded-xl border p-5" style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border)" }}>
-              <h3 className="text-sm font-semibold mb-3 flex items-center gap-2" style={{ color: "var(--text)" }}>
-                <Layers className="w-4 h-4" style={{ color: "var(--accent)" }} />
-                How Specs Work
+            <div className="border p-5" style={{ backgroundColor: "#ffffff", borderColor: "#e5e5e5" }}>
+              <h3 className="text-xs font-bold tracking-widest mb-3 flex items-center gap-2 uppercase" style={{ color: RED }}>
+                <Layers className="w-4 h-4" style={{ color: RED }} />
+                HOW TO USE
               </h3>
-              <ul className="space-y-2 text-sm" style={{ color: "var(--text-secondary)" }}>
-                <li>• Specs are organized in a <strong>tree structure</strong></li>
-                <li>• Each spec can have <strong>child specs</strong></li>
-                <li>• Click <strong>+</strong> on any spec to add a child</li>
-                <li>• Add a <strong>picture</strong> and <strong>color</strong> to visually categorize</li>
-                <li>• Add <strong>details</strong> to describe the spec fully</li>
-                <li>• <strong>Click</strong> a node to expand/collapse children</li>
+              <ul className="space-y-2 text-xs font-mono tracking-wider" style={{ color: BLUE }}>
+                <li>▶ SPECS ARE ORGANIZED IN A TREE</li>
+                <li>▶ EACH SPEC CAN HAVE CHILDREN</li>
+                <li>▶ CLICK + TO ADD A CHILD</li>
+                <li>▶ ADD PICTURE + COLOR TO CATEGORIZE</li>
+                <li>▶ ADD DETAILS TO DESCRIBE SPECS</li>
               </ul>
             </div>
           </div>

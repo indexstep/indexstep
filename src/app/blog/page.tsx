@@ -53,18 +53,36 @@ export default function BlogPage() {
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
+    <div
+      className="min-h-screen"
+      style={{ backgroundColor: '#ffffff', color: '#111111', fontFamily: 'inherit' }}
+    >
+      {/* Force white bg on soro widget content */}
+      <style>{`
+        #soro-blog, #soro-blog * {
+          background-color: #ffffff !important;
+          color: #111111 !important;
+          border-color: #e5e5e5 !important;
+        }
+        #soro-blog a { color: #0066cc !important; }
+      `}</style>
+
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Blog</h1>
-          <p style={{ color: 'var(--text-secondary)' }}>
+          <h1 className="text-3xl font-bold mb-2" style={{ color: '#111111' }}>
+            Blog
+          </h1>
+          <p style={{ color: '#666666' }}>
             Guides, tips, and step-by-step tutorials from the stephud team.
           </p>
         </div>
 
         {loading ? (
           <div className="flex justify-center py-20">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: 'var(--accent)' }}></div>
+            <div
+              className="animate-spin rounded-full h-8 w-8 border-b-2"
+              style={{ borderColor: '#ff9940' }}
+            ></div>
           </div>
         ) : posts.length === 0 ? (
           <div id="soro-blog"></div>
@@ -75,7 +93,7 @@ export default function BlogPage() {
                 key={post.id}
                 href={`/blog/${post.slug}`}
                 className="block rounded-xl overflow-hidden transition-all hover:scale-[1.01]"
-                style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border)' }}
+                style={{ backgroundColor: '#f9f9f9', border: '1px solid #e5e5e5' }}
               >
                 {post.imageUrl && (
                   <div className="relative h-48 w-full">
@@ -83,20 +101,20 @@ export default function BlogPage() {
                       src={post.imageUrl}
                       alt={post.title}
                       className="object-cover w-full h-full"
-                      style={{ backgroundColor: 'var(--bg-highlight)' }}
+                      style={{ backgroundColor: '#e5e5e5' }}
                     />
                   </div>
                 )}
                 <div className="p-6">
-                  <h2 className="text-xl font-bold mb-2" style={{ color: 'var(--text)' }}>
+                  <h2 className="text-xl font-bold mb-2" style={{ color: '#111111' }}>
                     {post.title}
                   </h2>
                   {post.excerpt && (
-                    <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>
+                    <p className="mb-4" style={{ color: '#555555' }}>
                       {post.excerpt}
                     </p>
                   )}
-                  <div className="flex items-center gap-4 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                  <div className="flex items-center gap-4 text-sm" style={{ color: '#888888' }}>
                     <span>{post.authorName}</span>
                     <span>·</span>
                     <span>{formatDate(post.publishedAt || post.createdAt)}</span>

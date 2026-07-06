@@ -29,6 +29,15 @@ export default function BlogPage() {
       .catch(() => setLoading(false));
   }, []);
 
+  useEffect(() => {
+    if (posts.length === 0) {
+      const script = document.createElement('script');
+      script.src = 'https://app.trysoro.com/api/embed/38858c3d-3909-4aeb-948b-963a985c5e81';
+      script.defer = true;
+      document.getElementById('soro-blog')?.appendChild(script);
+    }
+  }, [posts]);
+
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return '';
     return new Date(dateStr).toLocaleDateString('en-US', {
@@ -58,10 +67,7 @@ export default function BlogPage() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: 'var(--accent)' }}></div>
           </div>
         ) : posts.length === 0 ? (
-          <>
-            <div id="soro-blog"></div>
-            <script src="https://app.trysoro.com/api/embed/38858c3d-3909-4aeb-948b-963a985c5e81" defer></script>
-          </>
+          <div id="soro-blog"></div>
         ) : (
           <div className="grid gap-6">
             {posts.map(post => (
@@ -100,8 +106,6 @@ export default function BlogPage() {
                 </div>
               </Link>
             ))}
-            <div id="soro-blog"></div>
-            <script src="https://app.trysoro.com/api/embed/38858c3d-3909-4aeb-948b-963a985c5e81" defer></script>
           </div>
         )}
       </div>

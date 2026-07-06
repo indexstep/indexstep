@@ -58,9 +58,10 @@ export default function BlogPage() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: 'var(--accent)' }}></div>
           </div>
         ) : posts.length === 0 ? (
-          <div className="text-center py-20" style={{ color: 'var(--text-secondary)' }}>
-            <p>No blog posts yet. Check back soon!</p>
-          </div>
+          <>
+            <div id="soro-blog"></div>
+            <script src="https://app.trysoro.com/api/embed/38858c3d-3909-4aeb-948b-963a985c5e81" defer></script>
+          </>
         ) : (
           <div className="grid gap-6">
             {posts.map(post => (
@@ -99,6 +100,8 @@ export default function BlogPage() {
                 </div>
               </Link>
             ))}
+            <div id="soro-blog"></div>
+            <script src="https://app.trysoro.com/api/embed/38858c3d-3909-4aeb-948b-963a985c5e81" defer></script>
           </div>
         )}
       </div>

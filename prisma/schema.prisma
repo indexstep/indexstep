@@ -238,6 +238,14 @@ model Spec {
   color      String   @default("#ff9940")
   icon       String?
   imageUrl   String?
+  published  Boolean  @default(false)
+  locked     Boolean  @default(false)
+  lockContent Boolean @default(false)
+  price      Int      @default(0) // price in cents, 0 = free
+  password   String?  // optional password to access a private spec
+  linkOnly   Boolean  @default(false) // unlisted — accessible via link but not in public listings
+  editCount  Int      @default(0)
+  lastEditAt DateTime?
   parentId   String?
   parent     Spec?    @relation("SpecChildren", fields: [parentId], references: [id])
   children   Spec[]   @relation("SpecChildren")

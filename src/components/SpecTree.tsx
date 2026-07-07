@@ -15,6 +15,7 @@ interface SpecNodeData {
   viewCount?: number;
   likeCount?: number;
   followCount?: number;
+  locked?: boolean;
   _count: { children: number };
   children?: SpecNodeData[];
 }
@@ -151,6 +152,7 @@ function SpecNode({
 
         {/* Name */}
         <span className="truncate" style={{ color: labelColor }}>{displayName}</span>
+        {spec.locked && <span className="ml-1" title="Locked">🔒</span>}
 
         {/* Image thumbnail */}
         {spec.imageUrl && (

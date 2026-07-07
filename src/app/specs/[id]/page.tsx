@@ -133,21 +133,6 @@ function RegistryRow({
         </span>
       </div>
 
-      {/* Type column */}
-      <div
-        className="flex items-center px-3"
-        style={{
-          width: "180px",
-          height: "23px",
-          borderRight: `1px solid ${WIN_BORDER}`,
-          flexShrink: 0,
-        }}
-      >
-        <span className="text-sm font-mono" style={{ color: TEXT_MUTED }}>
-          {hasChildren ? "REG_FOLDER" : "REG_SZ"}
-        </span>
-      </div>
-
       {/* Value column */}
       <div
         className="flex items-center px-3 flex-1"
@@ -182,19 +167,34 @@ export default function SpecDetailPage() {
   const [historyIndex, setHistoryIndex] = useState(-1);
   const nodeDataRef = useRef<Map<string, SpecNodeData>>(new Map());
   const [nodeDepths, setNodeDepths] = useState<Map<string, number>>(new Map());
+  const [passwordRequired, setPasswordRequired] = useState(false);
+  const [passwordInput, setPasswordInput] = useState("");
+  const [passwordError, setPasswordError] = useState(false);
 
-  const fetchSpec = useCallback(async () => {
+  const fetchSpec = useCallback(async (pwd?: string) => {
     try {
+      const specUrl = pwd ? `/api/specs/${id}?password=${encodeURIComponent(pwd)}` : `/api/specs/${id}`;
       const [specRes, treeRes] = await Promise.all([
-        fetch(`/api/specs/${id}`),
+        fetch(specUrl),
         fetch("/api/specs"),
       ]);
 
+      if (specRes.status === 401) {
+        const data = await specRes.json();
+        if (data.passwordRequired) {
+          setPasswordRequired(true);
+          setPasswordError(true);
+          setLoading(false);
+          return;
+        }
+      }
       if (!specRes.ok) throw new Error(`HTTP ${specRes.status}`);
       const specData = await specRes.json();
       setSpec(specData.spec);
       setLikedByMe(specData.likedByMe);
       setFollowedByMe(specData.followedByMe);
+      setPasswordRequired(false);
+      setPasswordError(false);
 
       if (treeRes.ok) {
         const treeData = await treeRes.json();
@@ -310,6 +310,52 @@ export default function SpecDetailPage() {
       <div className="flex flex-col h-[calc(100vh-4rem)]" style={{ backgroundColor: WIN_BG }}>
         <div className="flex items-center justify-center flex-1">
           <RefreshCw className="w-6 h-6 animate-spin" style={{ color: ACCENT }} />
+        </div>
+      </div>
+    );
+  }
+
+  if (passwordRequired) {
+    return (
+      <div className="flex flex-col h-[calc(100vh-4rem)] items-center justify-center" style={{ backgroundColor: WIN_BG }}>
+        <div className="win-panel p-8 text-center" style={{ maxWidth: "400px", width: "100%" }}>
+          <div className="text-4xl mb-4">🔒</div>
+          <h2 className="text-lg font-semibold mb-2" style={{ color: TEXT }}>This Spec is Password Protected</h2>
+          <p className="text-sm mb-6" style={{ color: TEXT_MUTED }}>Enter the password to view this spec.</p>
+          <form
+            onSubmit={(e) => { e.preventDefault(); fetchSpec(passwordInput); }}
+            className="space-y-3"
+          >
+            <input
+              type="password"
+              value={passwordInput}
+              onChange={(e) => setPasswordInput(e.target.value)}
+              placeholder="Enter password"
+              className="w-full px-4 py-2 rounded-lg border text-sm"
+              style={{ backgroundColor: WIN_PANEL, borderColor: passwordError ? RED : WIN_BORDER, color: TEXT }}
+              autoFocus
+            />
+            {passwordError && (
+              <p className="text-xs" style={{ color: RED }}>Incorrect password. Try again.</p>
+            )}
+            <div className="flex gap-2">
+              <button
+                type="submit"
+                className="flex-1 py-2 rounded-lg text-sm font-semibold text-white"
+                style={{ backgroundColor: ACCENT }}
+              >
+                Unlock
+              </button>
+              <button
+                type="button"
+                onClick={() => router.push("/specs")}
+                className="flex-1 py-2 rounded-lg text-sm font-semibold"
+                style={{ backgroundColor: WIN_TOOLBAR_BG, color: TEXT }}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     );
@@ -470,12 +516,7 @@ export default function SpecDetailPage() {
             >
               Name
             </div>
-            <div
-              className="px-3 text-xs font-semibold"
-              style={{ width: "180px", borderRight: `1px solid ${WIN_BORDER}`, height: "100%", display: "flex", alignItems: "center", flexShrink: 0 }}
-            >
-              Type
-            </div>
+
             <div className="px-3 flex-1 text-xs font-semibold" style={{ height: "100%", display: "flex", alignItems: "center" }}>
               Value
             </div>

@@ -96,6 +96,12 @@ export interface SpecChild {
   icon: string | null;
   imageUrl?: string | null;
   authorId?: string;
+  details?: string;
+  published?: boolean;
+  locked?: boolean;
+  lockContent?: boolean;
+  price?: number;
+  linkOnly?: boolean;
   _count: { children: number };
   children?: SpecChild[];
 }

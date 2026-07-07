@@ -71,6 +71,18 @@ export async function GET(request: NextRequest) {
     : { createdAt: "desc" };
 
     const user = await getCurrentUser();
+    const isAdmin = user?.role === "ADMIN" || user?.role === "MODERATOR";
+
+    // Filter: only show published or linkOnly specs to public, unpublished only to author/admin
+    if (!user) {
+      where.published = true;
+    } else if (!isAdmin) {
+      where.OR = [
+        { published: true },
+        { linkOnly: true, authorId: user.id },
+        { authorId: user.id },
+      ];
+    }
 
     if (flat) {
       // Flat list mode for search page
@@ -110,7 +122,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, details, color, icon, imageUrl, parentId } = body;
+    const { name, details, color, icon, imageUrl, parentId, published, locked, lockContent, price, password, linkOnly } = body;
 
     if (!name || !name.trim()) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
@@ -132,7 +144,13 @@ export async function POST(request: NextRequest) {
         imageUrl: imageUrl || null,
         parentId: parentId || null,
         authorId: user.id,
-      },
+        published: published ?? false,
+        locked: locked ?? false,
+        lockContent: lockContent ?? false,
+        price: price ?? 0,
+        password: password || null,
+        linkOnly: linkOnly ?? false,
+      } as any,
       include: {
         author: { select: { id: true, name: true } },
         children: {

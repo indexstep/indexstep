@@ -17,6 +17,12 @@ interface SpecItem extends SpecChild {
   details?: string;
   parentId?: string | null;
   imageUrl?: string | null;
+  published?: boolean;
+  locked?: boolean;
+  lockContent?: boolean;
+  price?: number;
+  password?: string | null;
+  linkOnly?: boolean;
   children?: SpecItem[];
 }
 
@@ -95,7 +101,7 @@ function SpecsContent() {
     if (specs.length > 0) findSpec();
   }, [editId, specs]);
 
-  const handleCreate = async (data: { name: string; details: string; color: string; icon: string | null; imageUrl: string | null; parentId: string | null }) => {
+  const handleCreate = async (data: { name: string; details: string; color: string; icon: string | null; imageUrl: string | null; parentId: string | null; published: boolean; locked: boolean; lockContent: boolean; price: number; password: string | null; linkOnly: boolean }) => {
     const res = await fetch("/api/specs", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -115,7 +121,7 @@ function SpecsContent() {
     setChildParentId(null);
   };
 
-  const handleUpdate = async (data: { name: string; details: string; color: string; icon: string | null; imageUrl: string | null; parentId: string | null }) => {
+  const handleUpdate = async (data: { name: string; details: string; color: string; icon: string | null; imageUrl: string | null; parentId: string | null; published: boolean; locked: boolean; lockContent: boolean; price: number; password: string | null; linkOnly: boolean }) => {
     if (!editingSpec?.id) return;
     const res = await fetch(`/api/specs/${editingSpec.id}`, {
       method: "PUT",

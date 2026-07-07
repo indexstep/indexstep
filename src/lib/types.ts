@@ -95,6 +95,7 @@ export interface SpecChild {
   color: string;
   icon: string | null;
   imageUrl?: string | null;
+  authorId?: string;
   _count: { children: number };
   children?: SpecChild[];
 }

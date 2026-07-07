@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, Suspense } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { useSearchParams } from "next/navigation";
 import SpecTree from "@/components/SpecTree";
 import SpecForm from "@/components/SpecForm";
@@ -20,6 +21,7 @@ interface SpecItem extends SpecChild {
 }
 
 function SpecsContent() {
+  const { user } = useAuth();
   const searchParams = useSearchParams();
   const editId = searchParams.get("edit");
 
@@ -148,6 +150,13 @@ function SpecsContent() {
     await fetchAllSpecs();
   };
 
+  const handleMultiDelete = async (ids: string[]) => {
+    if (!confirm(`Delete ${ids.length} specs and all their children? This cannot be undone.`)) return;
+    await Promise.all(ids.map(id => fetch(`/api/specs/${id}`, { method: "DELETE" })));
+    await fetchSpecs();
+    await fetchAllSpecs();
+  };
+
   const openNewSpec = () => {
     setEditingSpec(null);
     setChildParentId(null);
@@ -201,6 +210,7 @@ function SpecsContent() {
                   specs={specs as SpecItem[]}
                   onEdit={(spec) => { setEditingSpec(spec as SpecItem); setShowForm(true); }}
                   onDelete={handleDelete}
+                  onMultiDelete={handleMultiDelete}
                   onAddChild={openAddChild}
                 />
               )}

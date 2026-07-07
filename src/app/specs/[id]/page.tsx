@@ -3,14 +3,36 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import {
-  Heart, Eye, Users, ChevronRight, ArrowLeft, Edit2,
-  MessageCircle, Image, Paperclip, X, Upload, Plus, ChevronDown, ChevronRight as ThreadRight
-} from "lucide-react";
+import { Heart, Eye, Users, Edit2, Paperclip, ChevronRight, ChevronLeft, ArrowUp, RefreshCw, Home } from "lucide-react";
 import Button from "@/components/Button";
-import { RedditThreadItem } from "@/components/RedditThread";
+import SpecTree from "@/components/SpecTree";
 import { useAuth } from "@/contexts/AuthContext";
-import type { SpecChild } from "@/lib/types";
+
+const WIN_BG = "#f3f3f3";
+const WIN_PANEL = "#ffffff";
+const WIN_BORDER = "#d1d1d1";
+const WIN_TOOLBAR_BG = "#f9f9f9";
+const WIN_STATUS_BG = "#e8e8e8";
+const TEXT = "#1a1a1a";
+const TEXT_MUTED = "#6e6e6e";
+const ACCENT = "#0078d4";
+const ROW_ALT = "#f9f9f9";
+
+interface SpecNodeData {
+  id: string;
+  name: string;
+  color: string;
+  icon: string | null;
+  imageUrl?: string | null;
+  authorId?: string;
+  _count: { children: number };
+  details?: string;
+  parentId?: string | null;
+  viewCount?: number;
+  likeCount?: number;
+  followCount?: number;
+  children?: SpecNodeData[];
+}
 
 interface SpecAttachment {
   id: string;
@@ -34,253 +56,260 @@ interface SpecData {
   followCount: number;
   author: { id: string; name: string };
   parent: { id: string; name: string } | null;
-  children: (SpecChild & { viewCount: number; likeCount: number; followCount: number; details: string })[];
+  children: SpecNodeData[];
   attachments: SpecAttachment[];
 }
 
-function formatBytes(bytes: number) {
-  if (bytes < 1024) return `${bytes}B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
+// Build breadcrumb path from root to selected node
+function buildPath(node: SpecNodeData | null, treeSpecs: any[], rootName: string): string[] {
+  if (!node) return [rootName];
+  const path: string[] = [rootName];
+
+  const findPath = (nodes: any[], target: string, chain: string[]): string[] | null => {
+    for (const n of nodes) {
+      const newChain = [...chain, n.name];
+      if (n.id === target) return newChain;
+      if (n.children) {
+        const result = findPath(n.children, target, newChain);
+        if (result) return result;
+      }
+    }
+    return null;
+  };
+
+  const result = findPath(treeSpecs, node.id, []);
+  return result ? [...path, ...result] : path;
 }
 
-function AttachmentGallery({ attachments, specId, canEdit }: { attachments: SpecAttachment[]; specId: string; canEdit: boolean }) {
-  const [uploading, setUploading] = useState(false);
-  const [deleting, setDeleting] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const uploadFile = async (file: File) => {
-    setUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("name", file.name);
-      const res = await fetch(`/api/specs/${specId}/attachments`, { method: "POST", body: formData });
-      if (!res.ok) throw new Error("Upload failed");
-      // Trigger parent refresh — just reload
-      window.location.reload();
-    } catch (err) {
-      console.error(err);
-      alert("Upload failed");
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const deleteFile = async (attachmentId: string) => {
-    if (!confirm("Delete this attachment?")) return;
-    setDeleting(attachmentId);
-    try {
-      const res = await fetch(`/api/specs/${specId}/attachments/${attachmentId}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Delete failed");
-      window.location.reload();
-    } catch (err) {
-      console.error(err);
-      alert("Delete failed");
-    } finally {
-      setDeleting(null);
-    }
-  };
-
-  const imageAttachments = attachments.filter((a) => a.fileType === "image");
-  const fileAttachments = attachments.filter((a) => a.fileType !== "image");
-
+// Registry-style row
+function RegistryRow({
+  name,
+  value,
+  isAlt,
+  depth,
+  onClick,
+  onChildClick,
+  hasChildren,
+}: {
+  name: string;
+  value: string;
+  isAlt: boolean;
+  depth: number;
+  onClick?: () => void;
+  onChildClick?: () => void;
+  hasChildren?: boolean;
+}) {
+  // Alternating colors: even depth=RED, odd depth=BLUE
+  const RED = "#C8102E";
+  const BLUE = "#2C5FE6";
+  const nameColor = depth % 2 === 0 ? RED : BLUE;
   return (
-    <div className="space-y-4">
-      {/* Image Gallery — Reddit-style grid */}
-      {imageAttachments.length > 0 && (
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <Image className="w-4 h-4" style={{ color: "var(--accent)" }} />
-            <h3 className="text-sm font-semibold" style={{ color: "var(--text)" }}>
-              Media ({imageAttachments.length})
-            </h3>
-          </div>
-          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-            {imageAttachments.map((att) => (
-              <div key={att.id} className="relative group aspect-square rounded-lg overflow-hidden border"
-                style={{ borderColor: "var(--border)" }}>
-                <img
-                  src={att.fileUrl}
-                  alt={att.name}
-                  className="w-full h-full object-cover cursor-pointer"
-                  onClick={() => window.open(att.fileUrl, "_blank")}
-                />
-                {canEdit && (
-                  <button
-                    onClick={() => deleteFile(att.id)}
-                    disabled={deleting === att.id}
-                    className="absolute top-1 right-1 p-1 rounded-full bg-[var(--bg)]/80 opacity-0 group-hover:opacity-100 transition-opacity text-[var(--error)]"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* File Attachments list */}
-      {fileAttachments.length > 0 && (
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <Paperclip className="w-4 h-4" style={{ color: "var(--accent)" }} />
-            <h3 className="text-sm font-semibold" style={{ color: "var(--text)" }}>
-              Attachments ({fileAttachments.length})
-            </h3>
-          </div>
-          <div className="space-y-1.5">
-            {fileAttachments.map((att) => (
-              <div key={att.id} className="flex items-center gap-3 p-2.5 rounded-lg border group"
-                style={{ backgroundColor: "var(--bg)", borderColor: "var(--border)" }}>
-                <Paperclip className="w-4 h-4 flex-shrink-0" style={{ color: "var(--text-muted)" }} />
-                <div className="flex-1 min-w-0">
-                  <a href={att.fileUrl} target="_blank" rel="noreferrer" className="text-sm font-medium hover:underline truncate block" style={{ color: "var(--accent)" }}>
-                    {att.name}
-                  </a>
-                  <span className="text-xs" style={{ color: "var(--text-muted)" }}>{formatBytes(att.size)}</span>
-                </div>
-                {canEdit && (
-                  <button
-                    onClick={() => deleteFile(att.id)}
-                    disabled={deleting === att.id}
-                    className="p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity text-[var(--error)] hover:bg-[var(--bg-highlight)]"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Upload area */}
-      {canEdit && (
-        <div
-          onClick={() => inputRef.current?.click()}
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={(e) => {
-            e.preventDefault();
-            const file = e.dataTransfer.files[0];
-            if (file) uploadFile(file);
+    <div
+      className="flex items-center cursor-pointer group"
+      style={{
+        backgroundColor: isAlt ? ROW_ALT : WIN_PANEL,
+        borderBottom: `1px solid ${WIN_BORDER}`,
+        minHeight: "23px",
+      }}
+      onClick={onClick}
+      onDoubleClick={hasChildren ? onChildClick : undefined}
+    >
+      {/* Name column */}
+      <div
+        className="flex items-center px-3 flex-1 gap-1"
+        style={{ height: "23px", borderRight: `1px solid ${WIN_BORDER}` }}
+      >
+        {hasChildren ? (
+          <ChevronRight className="w-3 h-3 flex-shrink-0" style={{ color: TEXT_MUTED }} />
+        ) : null}
+        <span
+          className="text-sm truncate font-mono"
+          style={{
+            color: nameColor,
+            fontWeight: "500",
           }}
-          className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-[var(--accent)] transition-colors"
-          style={{ borderColor: "var(--border)" }}
         >
-          <input ref={inputRef} type="file" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadFile(f); }} />
-          {uploading ? (
-            <div className="flex flex-col items-center gap-2">
-              <div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
-              <p className="text-xs" style={{ color: "var(--text-muted)" }}>Uploading...</p>
-            </div>
-          ) : (
-            <div className="flex items-center justify-center gap-2">
-              <Plus className="w-4 h-4" style={{ color: "var(--text-muted)" }} />
-              <span className="text-sm" style={{ color: "var(--text-muted)" }}>Add attachment</span>
-            </div>
-          )}
-        </div>
-      )}
+          {name}
+        </span>
+      </div>
+
+      {/* Type column */}
+      <div
+        className="flex items-center px-3"
+        style={{
+          width: "180px",
+          height: "23px",
+          borderRight: `1px solid ${WIN_BORDER}`,
+          flexShrink: 0,
+        }}
+      >
+        <span className="text-sm font-mono" style={{ color: TEXT_MUTED }}>
+          {hasChildren ? "REG_FOLDER" : "REG_SZ"}
+        </span>
+      </div>
+
+      {/* Value column */}
+      <div
+        className="flex items-center px-3 flex-1"
+        style={{ height: "23px" }}
+      >
+        <span
+          className="text-sm truncate font-mono"
+          style={{ color: TEXT }}
+        >
+          {value || ""}
+        </span>
+      </div>
     </div>
   );
 }
 
 export default function SpecDetailPage() {
-  const params = useParams();
+  const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { user } = useAuth();
-  const id = params.id as string;
 
   const [spec, setSpec] = useState<SpecData | null>(null);
-  const [likedByMe, setLikedByMe] = useState(false);
-  const [followedByMe, setFollowedByMe] = useState(false);
+  const [treeSpecs, setTreeSpecs] = useState<any[]>([]);
+  const [selectedNode, setSelectedNode] = useState<SpecNodeData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [likedByMe, setLikedByMe] = useState(false);
   const [likeLoading, setLikeLoading] = useState(false);
+  const [followedByMe, setFollowedByMe] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
-  const [threadExpanded, setThreadExpanded] = useState(true);
-  const [expandedThreadIds, setExpandedThreadIds] = useState<Set<string>>(new Set());
+  const [history, setHistory] = useState<string[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const nodeDataRef = useRef<Map<string, SpecNodeData>>(new Map());
+  const [nodeDepths, setNodeDepths] = useState<Map<string, number>>(new Map());
 
   const fetchSpec = useCallback(async () => {
-    setLoading(true);
-    setError("");
     try {
-      const res = await fetch(`/api/specs/${id}`);
-      if (!res.ok) {
-        if (res.status === 404) setError("Spec not found");
-        else setError(`Error ${res.status}`);
-        return;
-      }
-      const data = await res.json();
-      setSpec(data.spec);
-      setLikedByMe(data.likedByMe);
-      setFollowedByMe(data.followedByMe);
+      const [specRes, treeRes] = await Promise.all([
+        fetch(`/api/specs/${id}`),
+        fetch("/api/specs"),
+      ]);
 
-      // Auto-expand top-level children
-      const topLevel = new Set<string>();
-      (data.spec.children || []).forEach((c: { id: string }) => topLevel.add(c.id));
-      setExpandedThreadIds(topLevel);
-    } catch (err) {
-      console.error(err);
+      if (!specRes.ok) throw new Error(`HTTP ${specRes.status}`);
+      const specData = await specRes.json();
+      setSpec(specData.spec);
+      setLikedByMe(specData.likedByMe);
+      setFollowedByMe(specData.followedByMe);
+
+      if (treeRes.ok) {
+        const treeData = await treeRes.json();
+        setTreeSpecs(treeData.specs || []);
+        // Clear and rebuild cache
+        nodeDataRef.current.clear();
+        const cacheNodes = (nodes: any[]) => {
+          nodes.forEach(n => {
+            nodeDataRef.current.set(n.id, n);
+            if (n.children) cacheNodes(n.children);
+          });
+        };
+        cacheNodes(treeData.specs || []);
+      }
+    } catch {
       setError("Failed to load spec");
     } finally {
       setLoading(false);
     }
   }, [id]);
 
-  const trackView = useCallback(async () => {
-    try {
-      await fetch(`/api/specs/${id}/view`, { method: "POST" });
-    } catch {}
-  }, [id]);
-
   useEffect(() => { fetchSpec(); }, [fetchSpec]);
-  useEffect(() => { if (spec) trackView(); }, [spec?.id]);
+
+  // Navigate to a node (adds to history)
+  const navigateTo = (node: SpecNodeData | null) => {
+    setSelectedNode(node);
+    setHistory(prev => [...prev.slice(0, historyIndex + 1), node?.id || ""]);
+    setHistoryIndex(prev => prev + 1);
+    // Calculate depth for all nodes under this one
+    if (node) {
+      const depths = new Map<string, number>();
+      const calcDepth = (n: any, d: number) => {
+        depths.set(n.id, d);
+        if (n.children) n.children.forEach((c: any) => calcDepth(c, d + 1));
+      };
+      calcDepth(node, 0);
+      setNodeDepths(depths);
+    }
+  };
+
+  const handleBack = () => {
+    if (historyIndex <= 0) return;
+    const prevId = history[historyIndex - 1];
+    const node = prevId ? nodeDataRef.current.get(prevId) || null : null;
+    setSelectedNode(node);
+    setHistoryIndex(prev => prev - 1);
+  };
+
+  const handleForward = () => {
+    if (historyIndex >= history.length - 1) return;
+    const nextId = history[historyIndex + 1];
+    const node = nextId ? nodeDataRef.current.get(nextId) || null : null;
+    setSelectedNode(node);
+    setHistoryIndex(prev => prev + 1);
+  };
+
+  const handleUp = () => {
+    // Go up one level (to parent)
+    if (!selectedNode && spec) {
+      // Already at root spec level, go to root tree
+      setSelectedNode(null);
+    } else if (selectedNode?.parentId) {
+      const parent = nodeDataRef.current.get(selectedNode.parentId);
+      if (parent) navigateTo(parent);
+    } else {
+      setSelectedNode(null);
+    }
+  };
 
   const handleLike = async () => {
-    if (!spec) return;
+    if (!user) { router.push("/login"); return; }
     setLikeLoading(true);
     try {
-      const res = await fetch(`/api/specs/${id}/like`, { method: "POST" });
-      if (res.status === 401) { router.push(`/login?redirect=/specs/${id}`); return; }
-      const data = await res.json();
-      setSpec({ ...spec, likeCount: data.likeCount });
-      setLikedByMe(data.liked);
-    } finally { setLikeLoading(false); }
+      const res = await fetch(`/api/specs/${id}/like`, { method: likedByMe ? "DELETE" : "POST" });
+      if (res.ok) {
+        setLikedByMe(!likedByMe);
+        setSpec(prev => prev ? { ...prev, likeCount: likedByMe ? prev.likeCount - 1 : prev.likeCount + 1 } : null);
+      }
+    } finally {
+      setLikeLoading(false);
+    }
   };
 
   const handleFollow = async () => {
-    if (!spec) return;
+    if (!user) { router.push("/login"); return; }
     setFollowLoading(true);
     try {
-      const res = await fetch(`/api/specs/${id}/follow`, { method: "POST" });
-      if (res.status === 401) { router.push(`/login?redirect=/specs/${id}`); return; }
-      const data = await res.json();
-      setSpec({ ...spec, followCount: data.followCount });
-      setFollowedByMe(data.following);
-    } finally { setFollowLoading(false); }
+      const res = await fetch(`/api/specs/${id}/follow`, { method: followedByMe ? "DELETE" : "POST" });
+      if (res.ok) {
+        setFollowedByMe(!followedByMe);
+        setSpec(prev => prev ? { ...prev, followCount: followedByMe ? prev.followCount - 1 : prev.followCount + 1 } : null);
+      }
+    } finally {
+      setFollowLoading(false);
+    }
   };
 
-  const toggleThreadExpand = (specId: string) => {
-    setExpandedThreadIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(specId)) next.delete(specId);
-      else next.add(specId);
-      return next;
-    });
+  const handleTreeSelect = (node: SpecNodeData) => {
+    const cached = nodeDataRef.current.get(node.id);
+    navigateTo(cached || node);
   };
 
-  const canEdit = !!(user && spec && (user.id === spec.author.id || user.role === "ADMIN"));
+  const canEdit = user?.id === spec?.author?.id || user?.role === "ADMIN" || user?.role === "MODERATOR";
+
+  // Build breadcrumb path
+  const breadcrumbPath = buildPath(selectedNode, treeSpecs, spec?.name || "");
+  const currentItems: SpecNodeData[] = selectedNode?.children || spec?.children || [];
+  // Depth of the selected node: items shown are at depth selectedNodeDepth + 1
+  const selectedNodeDepth = selectedNode ? (nodeDepths.get(selectedNode.id) ?? 0) : -1;
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="flex items-center gap-2" style={{ color: "var(--text-muted)" }}>
-          <div className="w-2 h-2 rounded-full bg-[var(--accent)] animate-bounce" />
-          <div className="w-2 h-2 rounded-full bg-[var(--accent)] animate-bounce" style={{ animationDelay: "150ms" }} />
-          <div className="w-2 h-2 rounded-full bg-[var(--accent)] animate-bounce" style={{ animationDelay: "300ms" }} />
+      <div className="flex flex-col h-[calc(100vh-4rem)]" style={{ backgroundColor: WIN_BG }}>
+        <div className="flex items-center justify-center flex-1">
+          <RefreshCw className="w-6 h-6 animate-spin" style={{ color: ACCENT }} />
         </div>
       </div>
     );
@@ -288,178 +317,225 @@ export default function SpecDetailPage() {
 
   if (error || !spec) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-        <p style={{ color: "var(--error)" }}>{error || "Spec not found"}</p>
-        <Link href="/specs">
-          <Button variant="secondary"><ArrowLeft className="w-4 h-4 mr-2" /> Back to Specs</Button>
-        </Link>
+      <div className="flex flex-col h-[calc(100vh-4rem)] items-center justify-center" style={{ backgroundColor: WIN_BG }}>
+        <p style={{ color: "#d13438" }}>{error || "Spec not found"}</p>
+        <Button onClick={() => router.push("/specs")} className="mt-4">Back to Specs</Button>
       </div>
     );
   }
 
-  const totalChildren = spec.children.length;
-
   return (
-    <div className="min-h-screen">
-      {/* Breadcrumb */}
-      <div className="border-b" style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border)" }}>
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <Link href="/specs" className="inline-flex items-center gap-1 text-sm hover:underline" style={{ color: "var(--text-muted)" }}>
-            <ArrowLeft className="w-4 h-4" /> Specifications
-          </Link>
-          {spec.parent && (
-            <>
-              <span className="mx-2" style={{ color: "var(--text-muted)" }}>/</span>
-              <Link href={`/specs/${spec.parent.id}`} className="text-sm hover:underline" style={{ color: "var(--text-muted)" }}>{spec.parent.name}</Link>
-            </>
-          )}
-          <span className="mx-2" style={{ color: "var(--text-muted)" }}>/</span>
-          <span className="text-sm" style={{ color: "var(--text)" }}>{spec.name}</span>
+    <div className="flex flex-col h-[calc(100vh-4rem)] overflow-hidden" style={{ backgroundColor: WIN_BG }}>
+      {/* ── TOOLBAR ── */}
+      <div
+        className="flex items-center gap-1 px-2 py-1"
+        style={{
+          backgroundColor: WIN_TOOLBAR_BG,
+          borderBottom: `1px solid ${WIN_BORDER}`,
+        }}
+      >
+        {/* Back */}
+        <button
+          onClick={handleBack}
+          disabled={historyIndex <= 0}
+          className="flex items-center justify-center w-7 h-7 rounded hover:bg-[#e0e0e0] disabled:opacity-40 disabled:cursor-default transition-colors"
+          title="Back"
+        >
+          <ChevronLeft className="w-4 h-4" style={{ color: TEXT }} />
+        </button>
+        {/* Forward */}
+        <button
+          onClick={handleForward}
+          disabled={historyIndex >= history.length - 1}
+          className="flex items-center justify-center w-7 h-7 rounded hover:bg-[#e0e0e0] disabled:opacity-40 disabled:cursor-default transition-colors"
+          title="Forward"
+        >
+          <ChevronRight className="w-4 h-4" style={{ color: TEXT }} />
+        </button>
+        {/* Up */}
+        <button
+          onClick={handleUp}
+          className="flex items-center justify-center w-7 h-7 rounded hover:bg-[#e0e0e0] transition-colors"
+          title="Up"
+        >
+          <ArrowUp className="w-4 h-4" style={{ color: TEXT }} />
+        </button>
+        {/* Refresh */}
+        <button
+          onClick={fetchSpec}
+          className="flex items-center justify-center w-7 h-7 rounded hover:bg-[#e0e0e0] transition-colors"
+          title="Refresh"
+        >
+          <RefreshCw className="w-4 h-4" style={{ color: TEXT }} />
+        </button>
+
+        <div className="w-px h-5 mx-1" style={{ backgroundColor: WIN_BORDER }} />
+
+        {/* Address bar */}
+        <div
+          className="flex items-center flex-1 px-2 py-1 rounded text-sm font-mono"
+          style={{
+            backgroundColor: WIN_PANEL,
+            border: `1px solid ${WIN_BORDER}`,
+            color: TEXT,
+            height: "28px",
+          }}
+        >
+          <Home className="w-3.5 h-3.5 mr-1.5 flex-shrink-0" style={{ color: TEXT_MUTED }} />
+          {breadcrumbPath.map((part, idx) => {
+            const depth = idx; // 0=root spec, 1+=children
+            const color = depth % 2 === 0 ? "#C8102E" : "#2C5FE6";
+            return (
+              <span key={idx} className="flex items-center">
+                {idx > 0 && <ChevronRight className="w-3 h-3 mx-1" style={{ color: TEXT_MUTED }} />}
+                <span style={{ color }}>
+                  {part}
+                </span>
+              </span>
+            );
+          })}
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Reddit-style main spec card */}
-        <div className="rounded-xl border mb-8 overflow-hidden" style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border)" }}>
-          {/* Reddit header: dot + expand + icon + name + meta */}
-          <div className="p-5">
-            <div className="flex items-start gap-3">
-              {/* Status dot */}
-              <span className="w-3 h-3 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: spec.color || "#3b82f6" }} />
-
-              {/* Thread expand/collapse */}
-              <button
-                onClick={() => setThreadExpanded(!threadExpanded)}
-                className="p-0.5 rounded hover:bg-[var(--bg-highlight)] transition-colors flex-shrink-0 mt-0.5"
-              >
-                {threadExpanded
-                  ? <ChevronDown className="w-4 h-4" style={{ color: "var(--text-muted)" }} />
-                  : <ThreadRight className="w-4 h-4" style={{ color: "var(--text-muted)" }} />
-                }
-              </button>
-
-              <div className="flex-1 min-w-0">
-                {/* Title row */}
-                <div className="flex items-center gap-2 flex-wrap">
-                  {spec.icon && <span className="text-2xl">{spec.icon}</span>}
-                  <h1 className="text-xl font-bold" style={{ color: "var(--text)" }}>{spec.name}</h1>
-                </div>
-
-                {/* Author + meta */}
-                <div className="flex items-center gap-3 mt-1.5 text-xs flex-wrap" style={{ color: "var(--text-muted)" }}>
-                  <span>by</span>
-                  <Link href={`/user/${spec.author.id}`} className="font-semibold hover:underline" style={{ color: "var(--accent)" }}>
-                    {spec.author.name}
-                  </Link>
-                  <span>·</span>
-                  <span className="flex items-center gap-0.5"><Eye className="w-3 h-3" />{spec.viewCount.toLocaleString()}</span>
-                  <span>·</span>
-                  <span className="flex items-center gap-0.5"><Heart className="w-3 h-3" />{spec.likeCount.toLocaleString()}</span>
-                  <span>·</span>
-                  <span className="flex items-center gap-0.5"><Users className="w-3 h-3" />{spec.followCount.toLocaleString()}</span>
-                  <span>·</span>
-                  <span className="flex items-center gap-0.5"><MessageCircle className="w-3 h-3" />{spec.attachments.length + totalChildren}</span>
-                </div>
-              </div>
-
-              {/* Action buttons */}
-              <div className="flex gap-2 flex-shrink-0">
-                {(user?.role === "ADMIN" || user?.role === "MODERATOR") && (
-                  <Button variant="secondary" size="sm" onClick={() => router.push(`/specs?edit=${id}`)}>
-                    <Edit2 className="w-4 h-4 mr-1" /> Edit
-                  </Button>
-                )}
-                <Button
-                  variant={likedByMe ? "primary" : "secondary"} size="sm" loading={likeLoading} onClick={handleLike}
-                >
-                  <Heart className={`w-4 h-4 mr-1 ${likedByMe ? "fill-current" : ""}`} />
-                  {likedByMe ? "Liked" : "Like"}
-                </Button>
-                <Button
-                  variant={followedByMe ? "primary" : "secondary"} size="sm" loading={followLoading} onClick={handleFollow}
-                >
-                  <Users className="w-4 h-4 mr-1" />
-                  {followedByMe ? "Following" : "Follow"}
-                </Button>
-              </div>
-            </div>
-
-            {/* Expanded content */}
-            {threadExpanded && (
-              <>
-                {/* Description */}
-                {spec.details && (
-                  <div className="mt-4 pt-4 border-t" style={{ borderColor: "var(--border)" }}>
-                    <div className="grid gap-2">
-                      {spec.details.split("\n").map((line, i) => {
-                        const colonIdx = line.indexOf(":");
-                        if (colonIdx > 0) {
-                          const label = line.slice(0, colonIdx + 1).trim();
-                          const value = line.slice(colonIdx + 1).trim();
-                          return (
-                            <div key={i} className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-3 p-3 rounded-lg"
-                              style={{ backgroundColor: "var(--bg)", border: "1px solid var(--border)" }}>
-                              <span className="text-xs font-semibold uppercase tracking-wide shrink-0 pt-0.5" style={{ color: "var(--accent)", minWidth: "120px" }}>{label}</span>
-                              <span className="text-sm" style={{ color: "var(--text)" }}>{value}</span>
-                            </div>
-                          );
-                        }
-                        if (line.trim()) {
-                          return (
-                            <div key={i} className="flex items-start gap-3 p-3 pl-6 rounded-lg"
-                              style={{ backgroundColor: "var(--bg)", border: "1px solid var(--border)", borderLeft: "3px solid var(--accent)" }}>
-                              <span className="text-sm" style={{ color: "var(--text-secondary)" }}>{line}</span>
-                            </div>
-                          );
-                        }
-                        return null;
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Attachments section */}
-                {(spec.attachments.length > 0 || canEdit) && (
-                  <div className="mt-5 pt-4 border-t" style={{ borderColor: "var(--border)" }}>
-                    <AttachmentGallery
-                      attachments={spec.attachments}
-                      specId={spec.id}
-                      canEdit={canEdit}
-                    />
-                  </div>
-                )}
-              </>
-            )}
+      {/* ── MAIN AREA ── */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* LEFT: Tree panel */}
+        <div
+          className="flex flex-col overflow-hidden"
+          style={{
+            width: "300px",
+            backgroundColor: WIN_PANEL,
+            borderRight: `1px solid ${WIN_BORDER}`,
+          }}
+        >
+          <div
+            className="px-3 py-2 text-xs font-semibold uppercase tracking-widest"
+            style={{ color: TEXT_MUTED, borderBottom: `1px solid ${WIN_BORDER}` }}
+          >
+            Tree
           </div>
-
-          {/* Reddit-style children thread section */}
-          {spec.children.length > 0 && (
-            <div className="border-t" style={{ borderColor: "var(--border)" }}>
-              <div className="px-5 py-3 border-b" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg)" }}>
-                <h2 className="text-sm font-semibold flex items-center gap-2" style={{ color: "var(--text)" }}>
-                  <ChevronRight className="w-4 h-4" style={{ color: "var(--accent)" }} />
-                  Sub-specs ({spec.children.length})
-                </h2>
-              </div>
-              <div className="p-3">
-                <RedditThreadItem
-                  spec={spec as any}
-                  dotColor={spec.color || "#3b82f6"}
-                  expandedIds={expandedThreadIds}
-                  onNavigate={(sid) => router.push(`/specs/${sid}`)}
-                  onToggleExpand={toggleThreadExpand}
-                />
-              </div>
-            </div>
-          )}
+          <div className="flex-1 overflow-y-auto p-2">
+            <SpecTree
+              specs={treeSpecs}
+              onSelect={handleTreeSelect as any}
+              onEdit={(s) => router.push(`/specs?edit=${s.id}`)}
+              onDelete={(sId) => {
+                if (!confirm("Delete this spec?")) return;
+                fetch(`/api/specs/${sId}`, { method: "DELETE" }).then((res) => {
+                  if (res.ok) {
+                    // If we deleted the selected node, go back
+                    if (selectedNode?.id === sId) {
+                      if (selectedNode.parentId) {
+                        const parent = nodeDataRef.current.get(selectedNode.parentId);
+                        if (parent) navigateTo(parent);
+                        else setSelectedNode(null);
+                      } else {
+                        setSelectedNode(null);
+                      }
+                    }
+                    fetchSpec();
+                  }
+                });
+              }}
+              onMultiDelete={(ids) => {
+                if (!confirm(`Delete ${ids.length} items? This cannot be undone.`)) return;
+                Promise.all(ids.map(id => fetch(`/api/specs/${id}`, { method: "DELETE" }))).then(() => {
+                  // If any deleted was the selected node, go back
+                  if (selectedNode && ids.includes(selectedNode.id)) {
+                    setSelectedNode(null);
+                  }
+                  fetchSpec();
+                });
+              }}
+              onAddChild={(parentId) => router.push(`/specs?childOf=${parentId}`)}
+            />
+          </div>
         </div>
 
-        {/* Empty children state */}
-        {spec.children.length === 0 && (
-          <div className="text-center py-10 rounded-xl border" style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border)" }}>
-            <p className="text-sm" style={{ color: "var(--text-muted)" }}>No sub-specs yet</p>
+        {/* RIGHT: Registry list panel */}
+        <div className="flex-1 flex flex-col overflow-hidden" style={{ backgroundColor: WIN_PANEL }}>
+          {/* Column headers */}
+          <div
+            className="flex items-center"
+            style={{
+              backgroundColor: WIN_TOOLBAR_BG,
+              borderBottom: `2px solid ${WIN_BORDER}`,
+              height: "26px",
+              flexShrink: 0,
+            }}
+          >
+            <div
+              className="px-3 flex-1 text-xs font-semibold"
+              style={{ borderRight: `1px solid ${WIN_BORDER}`, height: "100%", display: "flex", alignItems: "center" }}
+            >
+              Name
+            </div>
+            <div
+              className="px-3 text-xs font-semibold"
+              style={{ width: "180px", borderRight: `1px solid ${WIN_BORDER}`, height: "100%", display: "flex", alignItems: "center", flexShrink: 0 }}
+            >
+              Type
+            </div>
+            <div className="px-3 flex-1 text-xs font-semibold" style={{ height: "100%", display: "flex", alignItems: "center" }}>
+              Value
+            </div>
           </div>
-        )}
+
+          {/* Rows */}
+          <div className="flex-1 overflow-y-auto">
+            {currentItems.length === 0 ? (
+              <div className="flex items-center justify-center h-full">
+                <span className="text-sm" style={{ color: TEXT_MUTED }}>
+                  {selectedNode ? `No values for "${selectedNode.name}"` : "Select an item from the tree"}
+                </span>
+              </div>
+            ) : (
+              currentItems.map((item, idx) => (
+                <RegistryRow
+                  key={item.id}
+                  name={item.icon ? `${item.icon} ${item.name}` : item.name}
+                  value={item.details || ""}
+                  isAlt={idx % 2 === 1}
+                  depth={selectedNodeDepth + 1}
+                  hasChildren={!!(item.children && item.children.length > 0)}
+                  onClick={() => { if (item.children?.length) navigateTo(item); }}
+                  onChildClick={() => navigateTo(item)}
+                />
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── STATUS BAR ── */}
+      <div
+        className="flex items-center justify-between px-3 py-1 text-xs font-mono"
+        style={{
+          backgroundColor: WIN_STATUS_BG,
+          borderTop: `1px solid ${WIN_BORDER}`,
+          color: TEXT_MUTED,
+        }}
+      >
+        <div className="flex items-center gap-4">
+          <span>{currentItems.length} item{currentItems.length !== 1 ? "s" : ""}</span>
+          {selectedNode && (
+            <span>{(selectedNode.children || []).length} sub-item{(selectedNode.children || []).length !== 1 ? "s" : ""}</span>
+          )}
+        </div>
+        <div className="flex items-center gap-4">
+          <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{spec.viewCount}</span>
+          <span className="flex items-center gap-1"><Heart className="w-3 h-3" />{spec.likeCount}</span>
+          <span className="flex items-center gap-1"><Users className="w-3 h-3" />{spec.followCount}</span>
+          {canEdit && (
+            <button
+              onClick={() => router.push(`/specs?edit=${id}`)}
+              className="px-2 py-0.5 rounded hover:bg-[#d0d0d0] transition-colors"
+              style={{ color: TEXT }}
+            >
+              ✎ Edit
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

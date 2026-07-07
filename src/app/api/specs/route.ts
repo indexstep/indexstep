@@ -2,37 +2,98 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 
+// Recursively fetch a spec with all its descendants to unlimited depth
+async function fetchSpecTree(where: Record<string, unknown>) {
+  const specs = await prisma.spec.findMany({
+    where,
+    include: {
+      author: { select: { id: true, name: true } },
+      _count: { select: { children: true } },
+    },
+    orderBy: { createdAt: "asc" },
+  });
+
+  // Fetch children recursively for each spec
+  const attachChildren = async (specs: any[]): Promise<any[]> => {
+    return Promise.all(
+      specs.map(async (spec) => {
+        const children = await prisma.spec.findMany({
+          where: { parentId: spec.id },
+          include: {
+            author: { select: { id: true, name: true } },
+            _count: { select: { children: true } },
+          },
+          orderBy: { createdAt: "asc" },
+        });
+        if (children.length > 0) {
+          spec.children = await attachChildren(children);
+        } else {
+          spec.children = [];
+        }
+        return spec;
+      })
+    );
+  };
+
+  return attachChildren(specs);
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const rootOnly = searchParams.get("rootOnly") === "true";
     const parentId = searchParams.get("parentId");
+    const search = searchParams.get("search") || "";
+    const flat = searchParams.get("flat") === "true";
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "20");
+    const sort = searchParams.get("sort") || "newest";
 
     const where: Record<string, unknown> = {};
     if (rootOnly) {
       where.parentId = null;
     } else if (parentId) {
       where.parentId = parentId;
+    } else {
+      // Default: only root specs (parentId = null) for tree view
+      where.parentId = null;
     }
+    if (search) {
+      where.OR = [
+        { name: { contains: search } },
+        { details: { contains: search } },
+      ];
+    }
+
+    const orderBy: Record<string, string> =
+      sort === "oldest" ? { createdAt: "asc" }
+    : sort === "popular" ? { viewCount: "desc" }
+    : { createdAt: "desc" };
 
     const user = await getCurrentUser();
 
-    const specs = await prisma.spec.findMany({
-      where,
-      include: {
-        author: { select: { id: true, name: true } },
-        children: {
-          select: {
-            id: true, name: true, details: true, color: true, icon: true, imageUrl: true,
-            viewCount: true, likeCount: true, followCount: true,
+    if (flat) {
+      // Flat list mode for search page
+      const [specs, total] = await Promise.all([
+        prisma.spec.findMany({
+          where,
+          include: {
+            author: { select: { id: true, name: true } },
             _count: { select: { children: true } },
-            children: true,
           },
-        },
-        _count: { select: { children: true } },
-      },
-      orderBy: { createdAt: "desc" },
-    });
+          orderBy,
+          skip: (page - 1) * limit,
+          take: limit,
+        }),
+        prisma.spec.count({ where }),
+      ]);
+      return NextResponse.json({
+        specs,
+        pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+      });
+    }
+
+    const specs = await fetchSpecTree(where);
 
     return NextResponse.json({ specs });
   } catch (error) {

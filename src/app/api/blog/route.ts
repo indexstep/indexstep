@@ -65,3 +65,20 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json(post, { status: 201 });
 }
+
+// DELETE /api/blog?id=xxx - Delete a blog post (admin only)
+export async function DELETE(req: NextRequest) {
+  const user = await getCurrentUser();
+  if (!user || (user.role !== 'ADMIN' && user.role !== 'MODERATOR')) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get('id');
+  if (!id) {
+    return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+  }
+
+  await prisma.blogPost.delete({ where: { id } });
+  return NextResponse.json({ success: true });
+}

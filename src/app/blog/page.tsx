@@ -55,8 +55,15 @@ export default function BlogPage() {
   return (
     <div
       className="min-h-screen"
-      style={{ backgroundColor: '#ffffff', color: '#111111', fontFamily: 'inherit' }}
+      style={{ backgroundColor: 'var(--bg)', color: 'var(--text)', fontFamily: 'system-ui, -apple-system, sans-serif' }}
     >
+      {/* Win11 Toolbar */}
+      <div className="win-toolbar px-6 py-3 flex items-center gap-3">
+        <span className="text-base font-semibold" style={{ color: 'var(--text)' }}>Computer</span>
+        <span className="text-gray-400">›</span>
+        <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Blog</span>
+      </div>
+
       {/* Force white bg on soro widget content */}
       <style>{`
         #soro-blog, #soro-blog * {
@@ -67,12 +74,12 @@ export default function BlogPage() {
         #soro-blog a { color: #0066cc !important; }
       `}</style>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2" style={{ color: '#111111' }}>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--text)' }}>
             Blog
           </h1>
-          <p style={{ color: '#666666' }}>
+          <p style={{ color: 'var(--text-secondary)' }}>
             Guides, tips, and step-by-step tutorials from the stephud team.
           </p>
         </div>
@@ -92,8 +99,7 @@ export default function BlogPage() {
               <Link
                 key={post.id}
                 href={`/blog/${post.slug}`}
-                className="block rounded-xl overflow-hidden transition-all hover:scale-[1.01]"
-                style={{ backgroundColor: '#f9f9f9', border: '1px solid #e5e5e5' }}
+                className="block win-panel overflow-hidden transition-all card-hover"
               >
                 {post.imageUrl && (
                   <div className="relative h-48 w-full">
@@ -101,20 +107,20 @@ export default function BlogPage() {
                       src={post.imageUrl}
                       alt={post.title}
                       className="object-cover w-full h-full"
-                      style={{ backgroundColor: '#e5e5e5' }}
+                      style={{ backgroundColor: 'var(--bg-tertiary)' }}
                     />
                   </div>
                 )}
                 <div className="p-6">
-                  <h2 className="text-xl font-bold mb-2" style={{ color: '#111111' }}>
+                  <h2 className="text-xl font-bold mb-2" style={{ color: 'var(--text)' }}>
                     {post.title}
                   </h2>
                   {post.excerpt && (
-                    <p className="mb-4" style={{ color: '#555555' }}>
+                    <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>
                       {post.excerpt}
                     </p>
                   )}
-                  <div className="flex items-center gap-4 text-sm" style={{ color: '#888888' }}>
+                  <div className="flex items-center gap-4 text-sm" style={{ color: 'var(--text-muted)' }}>
                     <span>{post.authorName}</span>
                     <span>·</span>
                     <span>{formatDate(post.publishedAt || post.createdAt)}</span>

@@ -41,6 +41,91 @@
 }
 
 /* ========================
+   WIN11 THEME — Windows 11 style
+   ======================== */
+[data-theme="win11"] {
+  --bg: #f3f3f3;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #ebebeb;
+  --bg-highlight: #e0e0e0;
+
+  --text: #1a1a1a;
+  --text-secondary: #6e6e6e;
+  --text-muted: #999999;
+
+  --accent: #0078d4;
+  --accent-hover: #106ebe;
+  --accent-muted: rgba(0, 120, 212, 0.1);
+
+  --cyan: #0078d4;
+  --cyan-muted: rgba(0, 120, 212, 0.1);
+
+  --purple: #5b5ea6;
+  --purple-muted: rgba(91, 94, 166, 0.1);
+
+  --yellow: #d4a800;
+  --green: #10893d;
+  --red: #C8102E;
+  --orange: #C8102E;
+
+  --success: #10893d;
+  --warning: #d4a800;
+  --error: #C8102E;
+
+  --border: #d1d1d1;
+  --border-light: #e8e8e8;
+
+  --navbar-bg: rgba(255, 255, 255, 0.95);
+  --card-bg: #ffffff;
+  --input-bg: #f3f3f3;
+
+  /* Win11 panel styling */
+  --panel-radius: 8px;
+  --panel-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  --panel-border: 1px solid var(--border);
+  --toolbar-bg: #f9f9f9;
+  --status-bg: #e8e8e8;
+
+  /* Override scrollbar */
+  --scrollbar-thumb: #c1c1c1;
+}
+
+[data-theme="win11"] ::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+}
+
+[data-theme="win11"] ::selection {
+  background: rgba(0, 120, 212, 0.2);
+  color: var(--text);
+}
+
+[data-theme="win11"] *:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* Win11 panel base class */
+.win-panel {
+  background-color: var(--card-bg);
+  border: var(--panel-border);
+  border-radius: var(--panel-radius);
+  box-shadow: var(--panel-shadow);
+}
+
+/* Win11 toolbar */
+.win-toolbar {
+  background-color: var(--toolbar-bg);
+  border-bottom: 1px solid var(--border);
+}
+
+/* Win11 status bar */
+.win-statusbar {
+  background-color: var(--status-bg);
+  border-top: 1px solid var(--border);
+}
+
+/* ========================
    AYU DARK THEME
    ======================== */
 [data-theme="dark"] {

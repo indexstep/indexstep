@@ -74,11 +74,12 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             <button
               onClick={toggleTheme}
-              title={theme === "dark" ? "Switch to Light Theme" : "Switch to Dark Theme"}
-              className="p-2 rounded-lg hover:bg-[var(--bg-highlight)] transition-colors"
-              style={{ color: "var(--text-secondary)" }}
+              title={`Theme: ${theme} (click to cycle)`}
+              className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-[var(--bg-highlight)] transition-colors text-xs font-bold"
+              style={{ color: "var(--text-secondary)", border: "1px solid var(--border)" }}
             >
-              {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              {theme === "dark" ? <Moon className="w-4 h-4" /> : theme === "win11" ? <span style={{ color: "#0078d4", fontFamily: "monospace" }}>W</span> : <Sun className="w-4 h-4" />}
+              <span style={{ textTransform: "uppercase" }}>{theme}</span>
             </button>
             {user ? (
               <div className="relative">

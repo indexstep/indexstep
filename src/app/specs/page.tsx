@@ -170,30 +170,27 @@ function SpecsContent() {
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "#ffffff", fontFamily: "monospace" }}>
-      <div className="border-b border-gray-200" style={{ backgroundColor: "#ffffff" }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: RED }}>
-                <GitBranch className="w-5 h-5" style={{ color: "#ffffff" }} />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold tracking-widest" style={{ color: RED }}>SPECIFICATIONS</h1>
-                <p className="text-xs tracking-widest" style={{ color: BLUE }}>TREE-BASED SPECS AND DOCUMENTATION</p>
-              </div>
-            </div>
-            <Button onClick={openNewSpec} className="gap-2 font-mono text-xs tracking-widest uppercase" style={{ backgroundColor: RED, color: "#ffffff", border: "none" }}>
-              <Plus className="w-4 h-4" /> NEW SPEC
-            </Button>
-          </div>
+    <div className="min-h-screen" style={{ backgroundColor: "var(--bg)", fontFamily: "system-ui, -apple-system, sans-serif" }}>
+      {/* Win11 Toolbar */}
+      <div className="win-toolbar px-4 py-3 flex items-center justify-between" style={{ borderRadius: "0" }}>
+        <div className="flex items-center gap-3">
+          <GitBranch className="w-5 h-5" style={{ color: RED }} />
+          <span className="text-base font-semibold" style={{ color: "var(--text)" }}>Computer</span>
+          <span className="text-gray-400 text-sm">›</span>
+          <span className="text-sm font-semibold" style={{ color: "var(--text)" }}>Specifications</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-xs" style={{ color: "var(--text-muted)" }}>Tree-based documentation</span>
+          <Button onClick={openNewSpec} className="gap-2 text-xs font-semibold" style={{ backgroundColor: "var(--accent)", color: "#fff", border: "none", padding: "6px 16px", borderRadius: "4px" }}>
+            <Plus className="w-3.5 h-3.5" /> NEW SPEC
+          </Button>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-            <div className="border p-5" style={{ backgroundColor: "#ffffff", borderColor: "#e5e5e5" }}>
+            <div className="win-panel p-4">
               {loading ? (
                 <div className="flex items-center justify-center py-16 gap-2" style={{ color: "var(--text-muted)" }}>
                   <div className="w-2 h-2 rounded-full bg-[var(--accent)] animate-bounce" />
@@ -218,17 +215,17 @@ function SpecsContent() {
           </div>
 
           <div className="space-y-4">
-            <div className="border p-5" style={{ backgroundColor: "#ffffff", borderColor: "#e5e5e5" }}>
-              <h3 className="text-xs font-bold tracking-widest mb-3 flex items-center gap-2 uppercase" style={{ color: RED }}>
+            <div className="win-panel p-4">
+              <h3 className="text-xs font-bold mb-3 flex items-center gap-2 uppercase tracking-wider" style={{ color: RED }}>
                 <Layers className="w-4 h-4" style={{ color: RED }} />
                 HOW TO USE
               </h3>
-              <ul className="space-y-2 text-xs font-mono tracking-wider" style={{ color: BLUE }}>
-                <li>▶ SPECS ARE ORGANIZED IN A TREE</li>
-                <li>▶ EACH SPEC CAN HAVE CHILDREN</li>
-                <li>▶ CLICK + TO ADD A CHILD</li>
-                <li>▶ ADD PICTURE + COLOR TO CATEGORIZE</li>
-                <li>▶ ADD DETAILS TO DESCRIBE SPECS</li>
+              <ul className="space-y-2 text-xs tracking-wide" style={{ color: "var(--text-secondary)", fontFamily: "system-ui, -apple-system, sans-serif" }}>
+                <li>▸ Specs are organized in a tree</li>
+                <li>▸ Each spec can have children</li>
+                <li>▸ Click + to add a child</li>
+                <li>▸ Multi-delete: select multiple items</li>
+                <li>▸ RED folders, BLUE leaf values</li>
               </ul>
             </div>
           </div>

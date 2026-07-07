@@ -2,38 +2,45 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 
-type Theme = "light" | "dark";
+type Theme = "light" | "dark" | "win11";
 
 interface ThemeContextType {
   theme: Theme;
+  themes: Theme[];
+  setTheme: (t: Theme) => void;
   toggleTheme: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | null>(null);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("dark");
+  const [theme, setThemeState] = useState<Theme>("dark");
+  const themes: Theme[] = ["light", "dark", "win11"];
 
   useEffect(() => {
-    // Restore saved preference
     const saved = localStorage.getItem("theme") as Theme | null;
-    if (saved === "light" || saved === "dark") {
-      setTheme(saved);
+    if (saved && themes.includes(saved)) {
+      setThemeState(saved);
       document.documentElement.setAttribute("data-theme", saved);
     } else {
       document.documentElement.setAttribute("data-theme", "dark");
     }
   }, []);
 
+  const setTheme = (t: Theme) => {
+    setThemeState(t);
+    localStorage.setItem("theme", t);
+    document.documentElement.setAttribute("data-theme", t);
+  };
+
   const toggleTheme = () => {
-    const next: Theme = theme === "dark" ? "light" : "dark";
+    const idx = themes.indexOf(theme);
+    const next = themes[(idx + 1) % themes.length];
     setTheme(next);
-    localStorage.setItem("theme", next);
-    document.documentElement.setAttribute("data-theme", next);
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, themes, setTheme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );

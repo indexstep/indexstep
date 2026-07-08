@@ -117,13 +117,35 @@ function RegistryRow({
       {hasChildren ? (
         <ChevronRight className="w-3 h-3 flex-shrink-0" style={{ color: TEXT_MUTED }} />
       ) : null}
+      {/* Name — never shrinks, shows full text */}
       <span
-        className="text-sm font-mono truncate"
-        style={{ color: nameColor, fontWeight: "500" }}
+        className="text-sm font-mono"
+        style={{
+          color: nameColor,
+          fontWeight: "500",
+          flexShrink: 0,
+          minWidth: "120px",
+          maxWidth: "200px",
+          overflowWrap: "anywhere",
+          wordBreak: "break-word",
+        }}
       >
         {name}
       </span>
-      <span className="text-sm font-mono truncate" style={{ color: TEXT }}>
+      {/* Separator */}
+      <span style={{ color: TEXT_MUTED, userSelect: "none", flexShrink: 0 }}>—</span>
+      {/* Value — flexible, scrolls if needed */}
+      <span
+        className="text-sm font-mono"
+        style={{
+          color: TEXT,
+          flex: 1,
+          overflowWrap: "anywhere",
+          wordBreak: "break-word",
+          whiteSpace: "pre-wrap",
+          overflowX: "hidden",
+        }}
+      >
         {value}
       </span>
     </div>
@@ -537,15 +559,26 @@ export default function SpecDetailPage() {
             return (
               <>
                 <div
-                  className="flex items-center px-3 gap-2"
+                  className="flex items-center px-3 gap-3"
                   style={{
                     backgroundColor: WIN_TOOLBAR_BG,
                     borderBottom: `2px solid ${WIN_BORDER}`,
-                    height: "26px",
                     flexShrink: 0,
+                    height: "32px",
                   }}
                 >
+                  <span
+                    className="text-xs font-bold px-2 py-0.5 rounded"
+                    style={{
+                      backgroundColor: "#C8102E",
+                      color: "#ffffff",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {selectedNode?.name || spec?.name}
+                  </span>
                   <span className="text-xs font-semibold" style={{ color: TEXT_MUTED }}>Name</span>
+                  <span style={{ color: TEXT_MUTED }}>—</span>
                   <span className="text-xs font-semibold" style={{ color: TEXT_MUTED }}>Value</span>
                 </div>
                 <div className="flex-1 overflow-y-auto">

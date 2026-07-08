@@ -481,33 +481,31 @@ export default function SpecDetailPage() {
 
         {/* RIGHT: Registry list panel */}
         <div className="flex-1 flex flex-col overflow-hidden" style={{ backgroundColor: WIN_PANEL }}>
-          {/* Header — simple single line */}
-          <div
-            className="flex items-center px-3 gap-2"
-            style={{
-              backgroundColor: WIN_TOOLBAR_BG,
-              borderBottom: `2px solid ${WIN_BORDER}`,
-              height: "26px",
-              flexShrink: 0,
-            }}
-          >
-            <span className="text-xs font-semibold" style={{ color: TEXT_MUTED }}>Name</span>
-            <span className="text-xs font-semibold" style={{ color: TEXT_MUTED }}>Value</span>
-          </div>
-
-          {/* Rows */}
-          <div className="flex-1 overflow-y-auto">
-            {(() => {
-              // If a leaf node (blue spec) is selected, show its details as the value
-              const isLeaf = !selectedNode || !selectedNode.children || selectedNode.children.length === 0;
-              if (isLeaf && selectedNode?.details) {
-                return (
-                  <div className="py-3 px-3">
-                    <div className="text-xs font-mono mb-2 uppercase tracking-wider" style={{ color: TEXT_MUTED }}>
-                      Value for: {selectedNode.name}
-                    </div>
+          {/* Leaf view: sticky name header + scrollable value */}
+          {(() => {
+            const isLeaf = !selectedNode || !selectedNode.children || selectedNode.children.length === 0;
+            if (isLeaf && selectedNode?.details) {
+              return (
+                <>
+                  {/* Sticky name box — always visible */}
+                  <div
+                    className="flex items-center px-4 py-2 flex-shrink-0"
+                    style={{
+                      backgroundColor: "#2C5FE6",
+                      borderBottom: `2px solid ${WIN_BORDER}`,
+                    }}
+                  >
+                    <span
+                      className="text-sm font-semibold font-mono"
+                      style={{ color: "#ffffff" }}
+                    >
+                      {selectedNode.icon ? `${selectedNode.icon}  ${selectedNode.name}` : selectedNode.name}
+                    </span>
+                  </div>
+                  {/* Scrollable value */}
+                  <div className="flex-1 overflow-y-auto p-4">
                     <div
-                      className="p-4 rounded-lg border font-mono text-sm"
+                      className="rounded-lg border font-mono text-sm"
                       style={{
                         backgroundColor: "#f0f7ff",
                         border: "1px solid #2C5FE6",
@@ -515,36 +513,55 @@ export default function SpecDetailPage() {
                         whiteSpace: "pre-wrap",
                         wordBreak: "break-word",
                         lineHeight: "1.6",
+                        minHeight: "100%",
                       }}
                     >
                       {selectedNode.details}
                     </div>
                   </div>
-                );
-              }
-              if (currentItems.length === 0) {
-                return (
-                  <div className="flex items-center justify-center h-full">
-                    <span className="text-sm" style={{ color: TEXT_MUTED }}>
-                      {selectedNode ? `No values for "${selectedNode.name}"` : "Select an item from the tree"}
-                    </span>
-                  </div>
-                );
-              }
-              return currentItems.map((item, idx) => (
-                <RegistryRow
-                  key={item.id}
-                  name={item.icon ? `${item.icon} ${item.name}` : item.name}
-                  value={item.details || ""}
-                  isAlt={idx % 2 === 1}
-                  depth={selectedNodeDepth + 1}
-                  hasChildren={!!(item.children && item.children.length > 0)}
-                  onClick={() => { if (item.children?.length) navigateTo(item); }}
-                  onChildClick={() => navigateTo(item)}
-                />
-              ));
-            })()}
-          </div>
+                </>
+              );
+            }
+            // Not a leaf — show normal registry list
+            return (
+              <>
+                <div
+                  className="flex items-center px-3 gap-2"
+                  style={{
+                    backgroundColor: WIN_TOOLBAR_BG,
+                    borderBottom: `2px solid ${WIN_BORDER}`,
+                    height: "26px",
+                    flexShrink: 0,
+                  }}
+                >
+                  <span className="text-xs font-semibold" style={{ color: TEXT_MUTED }}>Name</span>
+                  <span className="text-xs font-semibold" style={{ color: TEXT_MUTED }}>Value</span>
+                </div>
+                <div className="flex-1 overflow-y-auto">
+                  {currentItems.length === 0 ? (
+                    <div className="flex items-center justify-center h-full">
+                      <span className="text-sm" style={{ color: TEXT_MUTED }}>
+                        {selectedNode ? `No values for "${selectedNode.name}"` : "Select an item from the tree"}
+                      </span>
+                    </div>
+                  ) : (
+                    currentItems.map((item, idx) => (
+                      <RegistryRow
+                        key={item.id}
+                        name={item.icon ? `${item.icon} ${item.name}` : item.name}
+                        value={item.details || ""}
+                        isAlt={idx % 2 === 1}
+                        depth={selectedNodeDepth + 1}
+                        hasChildren={!!(item.children && item.children.length > 0)}
+                        onClick={() => { if (item.children?.length) navigateTo(item); }}
+                        onChildClick={() => navigateTo(item)}
+                      />
+                    ))
+                  )}
+                </div>
+              </>
+            );
+          })()}
         </div>
       </div>
 

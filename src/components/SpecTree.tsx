@@ -151,7 +151,7 @@ function SpecNode({
         <span className="flex-shrink-0" style={{ color: labelColor }}>{prefix}</span>
 
         {/* Name */}
-        <span className="truncate" style={{ color: labelColor }}>{displayName}</span>
+        <span className="truncate" style={{ color: labelColor }} title={spec.name}>{displayName}</span>
         {spec.locked && <span className="ml-1" title="Locked">🔒</span>}
 
         {/* Image thumbnail */}

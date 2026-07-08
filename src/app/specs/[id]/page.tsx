@@ -81,7 +81,7 @@ function buildPath(node: SpecNodeData | null, treeSpecs: any[], rootName: string
   return result ? [...path, ...result] : path;
 }
 
-// Registry-style row
+// Simple text row — name and value on ONE line, like a plain text file
 function RegistryRow({
   name,
   value,
@@ -99,13 +99,13 @@ function RegistryRow({
   onChildClick?: () => void;
   hasChildren?: boolean;
 }) {
-  // Alternating colors: even depth=RED, odd depth=BLUE
   const RED = "#C8102E";
   const BLUE = "#2C5FE6";
   const nameColor = depth % 2 === 0 ? RED : BLUE;
+
   return (
     <div
-      className="flex items-center cursor-pointer group"
+      className="flex items-center cursor-pointer group px-3 gap-2"
       style={{
         backgroundColor: isAlt ? ROW_ALT : WIN_PANEL,
         borderBottom: `1px solid ${WIN_BORDER}`,
@@ -114,37 +114,18 @@ function RegistryRow({
       onClick={onClick}
       onDoubleClick={hasChildren ? onChildClick : undefined}
     >
-      {/* Name column */}
-      <div
-        className="flex items-center px-3 flex-1 gap-1"
-        style={{ height: "23px", borderRight: `1px solid ${WIN_BORDER}` }}
+      {hasChildren ? (
+        <ChevronRight className="w-3 h-3 flex-shrink-0" style={{ color: TEXT_MUTED }} />
+      ) : null}
+      <span
+        className="text-sm font-mono truncate"
+        style={{ color: nameColor, fontWeight: "500" }}
       >
-        {hasChildren ? (
-          <ChevronRight className="w-3 h-3 flex-shrink-0" style={{ color: TEXT_MUTED }} />
-        ) : null}
-        <span
-          className="text-sm truncate font-mono"
-          style={{
-            color: nameColor,
-            fontWeight: "500",
-          }}
-        >
-          {name}
-        </span>
-      </div>
-
-      {/* Value column */}
-      <div
-        className="flex items-center px-3 flex-1"
-        style={{ height: "23px" }}
-      >
-        <span
-          className="text-sm truncate font-mono"
-          style={{ color: TEXT }}
-        >
-          {value || ""}
-        </span>
-      </div>
+        {name}
+      </span>
+      <span className="text-sm font-mono truncate" style={{ color: TEXT }}>
+        {value}
+      </span>
     </div>
   );
 }
@@ -500,9 +481,9 @@ export default function SpecDetailPage() {
 
         {/* RIGHT: Registry list panel */}
         <div className="flex-1 flex flex-col overflow-hidden" style={{ backgroundColor: WIN_PANEL }}>
-          {/* Column headers */}
+          {/* Header — simple single line */}
           <div
-            className="flex items-center"
+            className="flex items-center px-3 gap-2"
             style={{
               backgroundColor: WIN_TOOLBAR_BG,
               borderBottom: `2px solid ${WIN_BORDER}`,
@@ -510,28 +491,47 @@ export default function SpecDetailPage() {
               flexShrink: 0,
             }}
           >
-            <div
-              className="px-3 flex-1 text-xs font-semibold"
-              style={{ borderRight: `1px solid ${WIN_BORDER}`, height: "100%", display: "flex", alignItems: "center" }}
-            >
-              Name
-            </div>
-
-            <div className="px-3 flex-1 text-xs font-semibold" style={{ height: "100%", display: "flex", alignItems: "center" }}>
-              Value
-            </div>
+            <span className="text-xs font-semibold" style={{ color: TEXT_MUTED }}>Name</span>
+            <span className="text-xs font-semibold" style={{ color: TEXT_MUTED }}>Value</span>
           </div>
 
           {/* Rows */}
           <div className="flex-1 overflow-y-auto">
-            {currentItems.length === 0 ? (
-              <div className="flex items-center justify-center h-full">
-                <span className="text-sm" style={{ color: TEXT_MUTED }}>
-                  {selectedNode ? `No values for "${selectedNode.name}"` : "Select an item from the tree"}
-                </span>
-              </div>
-            ) : (
-              currentItems.map((item, idx) => (
+            {(() => {
+              // If a leaf node (blue spec) is selected, show its details as the value
+              const isLeaf = !selectedNode || !selectedNode.children || selectedNode.children.length === 0;
+              if (isLeaf && selectedNode?.details) {
+                return (
+                  <div className="py-3 px-3">
+                    <div className="text-xs font-mono mb-2 uppercase tracking-wider" style={{ color: TEXT_MUTED }}>
+                      Value for: {selectedNode.name}
+                    </div>
+                    <div
+                      className="p-4 rounded-lg border font-mono text-sm"
+                      style={{
+                        backgroundColor: "#f0f7ff",
+                        border: "1px solid #2C5FE6",
+                        color: TEXT,
+                        whiteSpace: "pre-wrap",
+                        wordBreak: "break-word",
+                        lineHeight: "1.6",
+                      }}
+                    >
+                      {selectedNode.details}
+                    </div>
+                  </div>
+                );
+              }
+              if (currentItems.length === 0) {
+                return (
+                  <div className="flex items-center justify-center h-full">
+                    <span className="text-sm" style={{ color: TEXT_MUTED }}>
+                      {selectedNode ? `No values for "${selectedNode.name}"` : "Select an item from the tree"}
+                    </span>
+                  </div>
+                );
+              }
+              return currentItems.map((item, idx) => (
                 <RegistryRow
                   key={item.id}
                   name={item.icon ? `${item.icon} ${item.name}` : item.name}
@@ -542,8 +542,8 @@ export default function SpecDetailPage() {
                   onClick={() => { if (item.children?.length) navigateTo(item); }}
                   onChildClick={() => navigateTo(item)}
                 />
-              ))
-            )}
+              ));
+            })()}
           </div>
         </div>
       </div>

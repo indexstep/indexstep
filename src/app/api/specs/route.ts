@@ -150,7 +150,8 @@ export async function POST(request: NextRequest) {
         price: price ?? 0,
         password: password || null,
         linkOnly: linkOnly ?? false,
-      } as any,
+        updatedAt: new Date(),
+      },
       include: {
         author: { select: { id: true, name: true } },
         children: {

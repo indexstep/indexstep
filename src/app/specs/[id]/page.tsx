@@ -493,12 +493,19 @@ export default function SpecDetailPage() {
                       backgroundColor: "#2C5FE6",
                       borderBottom: `3px solid #1a3fa0`,
                       flexShrink: 0,
+                      minWidth: 0,
                     }}
                   >
-                    <div className="px-4 py-2">
+                    <div className="px-4 py-2" style={{ minWidth: 0 }}>
                       <span
                         className="text-sm font-semibold font-mono"
-                        style={{ color: "#ffffff", overflowWrap: "anywhere" }}
+                        style={{
+                          color: "#ffffff",
+                          overflowWrap: "anywhere",
+                          wordBreak: "break-word",
+                          whiteSpace: "normal",
+                          flexShrink: 0,
+                        }}
                       >
                         {selectedNode.icon ? `${selectedNode.icon}  ${selectedNode.name}` : selectedNode.name}
                       </span>
